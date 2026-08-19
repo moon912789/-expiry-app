@@ -1,0 +1,12 @@
+{
+  "name": "expiry-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "유통기한 관리 웹앱 (정적 HTML/CSS/JS, 빌드 없음)",
+  "scripts": {
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  }
+}
