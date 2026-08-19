@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>항목 추가/수정</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!--
+    항목 추가/수정 화면
+    - 주소 뒤에 ?id=아이디 가 붙어 있으면 "수정 모드"로 동작합니다.
+      예) add.html?id=1699999999999
+    - id가 없으면 "추가 모드"로 동작합니다.
+    - 모드에 따른 처리는 js/form.js 에서 합니다.
+  -->
+  <header class="app-header">
+    <a href="index.html" class="back-btn" aria-label="목록으로 돌아가기">&larr;</a>
+    <h1 id="form-title">항목 추가</h1>
+  </header>
+
+  <main>
+    <form id="item-form" class="item-form">
+      <label for="name">품목명</label>
+      <input type="text" id="name" placeholder="예: 우유, 계란, 스킨로션" required>
+
+      <label for="purchaseDate">구매일</label>
+      <input type="date" id="purchaseDate" required>
+
+      <label for="expiryDate">유통기한</label>
+      <input type="date" id="expiryDate" required>
+
+      <!-- 구매일 기준으로 며칠 뒤인지 버튼으로 빠르게 선택할 수 있습니다 -->
+      <div class="quick-buttons">
+        <button type="button" class="quick-btn" data-days="3">+3일</button>
+        <button type="button" class="quick-btn" data-days="7">+7일</button>
+        <button type="button" class="quick-btn" data-days="14">+14일</button>
+        <button type="button" class="quick-btn" data-days="30">+30일</button>
+      </div>
+
+      <button type="submit" class="save-btn">저장</button>
+      <!-- 삭제 버튼은 수정 모드일 때만 form.js가 보이도록 만듭니다 -->
+      <button type="button" id="delete-btn" class="delete-btn" style="display: none;">삭제</button>
+    </form>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/dateUtils.js"></script>
+  <script src="js/form.js"></script>
+</body>
+</html>

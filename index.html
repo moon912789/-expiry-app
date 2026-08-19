@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>유통기한 관리</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!--
+    메인 화면(목록 화면)
+    - 저장된 항목들을 유통기한이 임박한 순서로 보여줍니다.
+    - 실제 목록을 그리는 코드는 js/main.js 에 있습니다.
+  -->
+  <header class="app-header">
+    <h1>유통기한 관리</h1>
+    <a href="calendar.html" class="calendar-btn" aria-label="캘린더 보기">📅</a>
+    <a href="add.html" class="add-btn">+ 추가</a>
+  </header>
+
+  <main>
+    <ul id="item-list" class="item-list">
+      <!-- main.js가 실행되면서 이 자리에 항목들을 자동으로 채워줍니다 -->
+    </ul>
+  </main>
+
+  <!--
+    스크립트는 아래 순서로 불러와야 합니다.
+    1) storage.js  : localStorage에 데이터를 읽고 쓰는 함수 모음
+    2) dateUtils.js: 날짜 계산(D-day 등) 함수 모음
+    3) main.js     : 위 두 파일의 함수를 이용해서 화면(목록)을 그림
+  -->
+  <script src="js/storage.js"></script>
+  <script src="js/dateUtils.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

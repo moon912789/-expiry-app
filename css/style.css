@@ -1,0 +1,316 @@
+/*
+  style.css
+  - 두 화면(index.html, add.html)이 공통으로 사용하는 스타일입니다.
+  - 색상 규칙: 초록(green)=여유 있음, 노랑(yellow)=임박, 빨강(red)=오늘/지남
+*/
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  background-color: #f5f5f5;
+  color: #222;
+}
+
+/* 상단 헤더 (제목 + 버튼) */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+}
+
+.app-header h1 {
+  flex: 1;
+  font-size: 20px;
+  margin: 0;
+}
+
+.add-btn,
+.back-btn {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+}
+
+.add-btn {
+  background-color: #4caf50;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.back-btn {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.calendar-btn {
+  font-size: 20px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* 항목 목록 */
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-list .empty {
+  text-align: center;
+  color: #888;
+  padding: 40px 0;
+}
+
+.item {
+  background-color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid #ccc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 남은 일수에 따른 상태 색상 */
+.item.green {
+  border-left-color: #4caf50;
+}
+
+.item.yellow {
+  border-left-color: #ffc107;
+}
+
+.item.red {
+  border-left-color: #f44336;
+}
+
+.item-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.item-name {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.item-dday {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background-color: #eee;
+}
+
+.item.green .item-dday {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+}
+
+.item.yellow .item-dday {
+  color: #b28704;
+  background-color: #fff8e1;
+}
+
+.item.red .item-dday {
+  color: #c62828;
+  background-color: #ffebee;
+}
+
+/* 추가/수정 폼 */
+.item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-form label {
+  font-size: 14px;
+  color: #555;
+  margin-top: 12px;
+}
+
+.item-form input[type="text"],
+.item-form input[type="date"] {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.quick-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.quick-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid #4caf50;
+  background-color: #fff;
+  color: #4caf50;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.quick-btn:hover {
+  background-color: #e8f5e9;
+}
+
+.save-btn,
+.delete-btn {
+  margin-top: 20px;
+  padding: 12px 0;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background-color: #4caf50;
+  color: #fff;
+}
+
+.delete-btn {
+  background-color: #fff;
+  color: #f44336;
+  border: 1px solid #f44336;
+}
+
+/* 캘린더 화면 (calendar.html) */
+
+/* 상단의 이전달 < 2026년 8월 > 다음달 영역 */
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.calendar-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.nav-btn {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.nav-btn:hover {
+  background-color: #f0f0f0;
+}
+
+/* 요일 헤더 + 날짜 칸을 7칸짜리 격자로 배치 */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+  padding: 6px 0;
+}
+
+/* 날짜 한 칸 */
+.calendar-day {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background-color: #fff;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.calendar-day:hover {
+  background-color: #f0f0f0;
+}
+
+.calendar-day.empty {
+  background-color: transparent;
+  cursor: default;
+}
+
+/* 오늘 날짜 */
+.calendar-day.today {
+  border-color: #4caf50;
+  font-weight: bold;
+}
+
+/* 사용자가 클릭해서 선택한 날짜 */
+.calendar-day.selected {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+}
+
+/* 그 날짜가 유통기한인 항목 개수를 보여주는 작은 동그라미 배지 */
+.day-badge {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.day-badge.green {
+  background-color: #4caf50;
+}
+
+.day-badge.yellow {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.day-badge.red {
+  background-color: #f44336;
+}
+
+/* 날짜를 클릭했을 때 달력 아래에 나타나는 항목 목록 영역 */
+.selected-day-items {
+  margin-top: 20px;
+}
+
+.selected-day-heading {
+  font-size: 15px;
+  margin: 0 0 10px;
+}

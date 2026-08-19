@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>캘린더</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!--
+    캘린더 화면
+    - 월별 달력을 보여주고, 유통기한이 있는 날짜에는 숫자 배지를 표시합니다.
+    - 날짜를 클릭하면 그 날짜가 유통기한인 항목들을 달력 아래에 보여줍니다.
+    - 실제 달력을 그리는 코드는 js/calendar.js 에 있습니다.
+  -->
+  <header class="app-header">
+    <a href="index.html" class="back-btn" aria-label="목록으로 돌아가기">&larr;</a>
+    <h1>캘린더</h1>
+  </header>
+
+  <main>
+    <div class="calendar-nav">
+      <button type="button" id="prev-month-btn" class="nav-btn" aria-label="이전 달">&lt;</button>
+      <span id="calendar-title" class="calendar-title"></span>
+      <button type="button" id="next-month-btn" class="nav-btn" aria-label="다음 달">&gt;</button>
+    </div>
+
+    <div id="calendar-grid" class="calendar-grid">
+      <!-- calendar.js가 요일 헤더와 날짜 칸들을 여기에 채워줍니다 -->
+    </div>
+
+    <section id="selected-day-items" class="selected-day-items">
+      <!-- 날짜 칸을 클릭하면 그 날이 유통기한인 항목 목록이 여기에 나타납니다 -->
+    </section>
+  </main>
+
+  <!--
+    storage.js, dateUtils.js는 index.html / add.html에서 쓰던 것과 동일한 파일입니다.
+    (데이터 저장 방식과 날짜 계산 방식을 화면마다 다르게 만들지 않기 위해 그대로 재사용합니다)
+  -->
+  <script src="js/storage.js"></script>
+  <script src="js/dateUtils.js"></script>
+  <script src="js/calendar.js"></script>
+</body>
+</html>
