@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    앱 아이콘 (유통기한 관리)
+    - 배경: 초록~민트 그라데이션의 둥근 사각형
+    - 가운데: 흰색 캘린더 모양
+    - 오른쪽 아래: 빨간 배지 = 앱 안에서 쓰는 "임박/지남" 빨간색과 맞춘 강조 포인트
+    벡터(SVG)라서 192x192, 512x512 등 어떤 크기로 써도 화질이 깨지지 않습니다.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#26A69A" />
+      <stop offset="100%" stop-color="#43A047" />
+    </linearGradient>
+  </defs>
+
+  <!-- 배경 (둥근 사각형) -->
+  <rect x="0" y="0" width="512" height="512" rx="110" fill="url(#bg)" />
+
+  <!-- 캘린더 몸통 (흰색 카드) -->
+  <rect x="96" y="150" width="320" height="270" rx="28" fill="#ffffff" />
+
+  <!-- 캘린더 상단 헤더 바 (진한 초록) -->
+  <path d="M96 178a28 28 0 0 1 28-28h236a28 28 0 0 1 28 28v46H96z" fill="#2E7D32" />
+
+  <!-- 상단 스프링 링 두 개 -->
+  <rect x="150" y="112" width="28" height="66" rx="14" fill="#2E7D32" />
+  <rect x="334" y="112" width="28" height="66" rx="14" fill="#2E7D32" />
+
+  <!-- 캘린더 안쪽 날짜 칸 (간단한 격자 느낌) -->
+  <g fill="#C8E6C9">
+    <rect x="132" y="252" width="52" height="40" rx="8" />
+    <rect x="202" y="252" width="52" height="40" rx="8" />
+    <rect x="272" y="252" width="52" height="40" rx="8" />
+    <rect x="132" y="312" width="52" height="40" rx="8" />
+    <rect x="202" y="312" width="52" height="40" rx="8" />
+  </g>
+
+  <!-- 오늘 날짜 칸 (강조) -->
+  <rect x="272" y="312" width="52" height="40" rx="8" fill="#2E7D32" />
+
+  <!-- 유통기한 임박을 뜻하는 빨간 배지 -->
+  <circle cx="400" cy="380" r="46" fill="#F44336" stroke="#ffffff" stroke-width="10" />
+  <rect x="392" y="358" width="16" height="30" rx="8" fill="#ffffff" />
+  <circle cx="400" cy="400" r="8" fill="#ffffff" />
+</svg>
