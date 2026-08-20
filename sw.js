@@ -12,7 +12,7 @@
   버전(v1)을 v2처럼 올려주세요. 그러면 예전 캐시는 activate 단계에서 자동으로 정리됩니다.
 */
 
-const CACHE_NAME = "expiry-app-cache-v4";
+const CACHE_NAME = "expiry-app-cache-v5";
 
 // 앱이 열릴 때 최소한으로 필요한 파일들만 캐시해둡니다.
 // (바코드 스캔에 쓰는 CDN 라이브러리는 우리 사이트와 다른 서버 파일이라 여기 목록에는 넣지 않습니다.

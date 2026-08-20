@@ -2,16 +2,26 @@
   barcode.js
   역할: add.html의 "바코드로 자동 입력" 버튼을 눌렀을 때
         1) 카메라를 켜서 바코드/QR코드를 인식하고
-        2) 인식된 번호로 Open Food Facts에서 제품 정보를 찾아
-        3) 품목명(nameInput) 입력칸에 자동으로 채워줍니다.
+        2) 인식된 번호로 제품 정보를 찾아서(1순위: 식약처 푸드QR, 2순위: Open Food Facts)
+        3) 품목명(nameInput), 가능하면 유통기한(expiryDateInput)까지 자동으로 채워줍니다.
 
-  이 파일은 두 가지를 그대로 재사용합니다.
+  이 파일은 세 가지를 그대로 재사용합니다.
   - CDN으로 불러온 html5-qrcode 라이브러리의 Html5Qrcode 클래스 (카메라/인식 담당)
-  - form.js에서 이미 만들어 둔 nameInput 변수 (같은 화면의 스크립트라 따로 안 만들고 그대로 씁니다)
+  - form.js에서 이미 만들어 둔 nameInput, expiryDateInput 변수 (같은 화면의 스크립트라 따로 안 만들고 그대로 씁니다)
 
-  카메라가 없거나 권한을 거부한 경우에도 이 파일의 코드는 실패를 조용히 처리할 뿐,
-  나머지 폼(직접 입력)은 원래대로 문제없이 동작합니다.
+  카메라가 없거나 권한을 거부한 경우, 두 조회가 모두 실패한 경우에도
+  이 파일의 코드는 실패를 조용히 처리할 뿐, 나머지 폼(직접 입력)은 원래대로 문제없이 동작합니다.
+
+  주의(보안): 아래 FOOD_QR_SERVICE_KEY는 공공데이터포털에서 발급받은 개인 인증키입니다.
+  이 앱은 서버 없이 브라우저에서 직접 API를 호출하는 구조라, 배포된 사이트의 소스코드를 보면
+  누구나 이 키를 볼 수 있습니다(GitHub 저장소가 공개 저장소라면 거기서도 보입니다).
+  결제 정보 같은 민감한 키는 아니지만, 이 점은 참고해주세요.
 */
+
+// 공공데이터포털에서 발급받은 서비스키 (이미 URL 인코딩된 형태입니다.
+// 여기에 encodeURIComponent를 한 번 더 씌우면 이중 인코딩되어 인증 오류가 나므로 그대로 붙여씁니다)
+const FOOD_QR_SERVICE_KEY =
+  "RiZLaYF814L7u0rY7EYTJAJEh%2Bi14AvxitftTLtSLYik%2FbhZSFjbTeuMBw9MhO33GCv%2FownnYqrRKNI6o5Cevg%3D%3D";
 
 const scanBtn = document.getElementById("barcode-scan-btn");
 const scannerOverlay = document.getElementById("barcode-scanner-overlay");
@@ -102,41 +112,109 @@ function onScanSuccess(decodedText) {
   lookupProduct(decodedText);
 }
 
-// Open Food Facts API로 제품 정보를 조회합니다.
-// 찾으면 품목명 입력칸을 채우고, 못 찾거나 요청 자체가 실패하면
-// 팝업 없이 안내 문구만 보여주고 사용자가 직접 입력하도록 그대로 둡니다.
+// "20261231" 같은 8자리 숫자(YYYYMMDD)면 "2026-12-31"로 바꿔서 돌려주고,
+// 그 형태가 아니면 null을 돌려줍니다. (날짜 입력칸에는 이 형식만 넣을 수 있습니다)
+function parseYmdDate(text) {
+  if (!text || !/^\d{8}$/.test(text)) return null;
+  return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
+}
+
+// 1순위: 식약처 푸드QR 정보서비스(getFoodQrIndctInfo01)로 조회합니다.
+// 제품표시명(PRDCT_NM)과 소비기한(CPN_TERM_CN)을 갖고 있으면 그 값을 돌려주고,
+// 못 찾았거나 요청 자체가 실패하면 null을 돌려줍니다. (에러를 던지지 않고 null로 알려줌)
+async function lookupFoodQr(barcode) {
+  const params = new URLSearchParams({ type: "json", numOfRows: "1", pageNo: "1", brcd_no: barcode });
+  // serviceKey는 이미 인코딩되어 있어서 URLSearchParams로 만들지 않고 문자열로 직접 붙입니다.
+  const url = `https://apis.data.go.kr/1471000/FoodQrInfoService01/getFoodQrIndctInfo01?serviceKey=${FOOD_QR_SERVICE_KEY}&${params.toString()}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.warn("[barcode] 푸드QR API 응답 실패:", response.status);
+    return null;
+  }
+
+  const data = await response.json();
+  console.log("[barcode] 푸드QR API 응답:", data); // 디버깅용
+
+  if (!data.header || data.header.resultCode !== "00") {
+    // 이 API가 정부 서버 쪽 사정으로 에러를 낼 때가 있습니다(예: "System Error!!").
+    // 우리 쪽 코드 문제가 아니라 API 응답 자체가 실패라서, 실패로 보고 2순위로 넘어갑니다.
+    console.warn("[barcode] 푸드QR API 에러 응답:", data.header && data.header.resultMsg);
+    return null;
+  }
+
+  const items = data.body && data.body.items && data.body.items.item;
+  if (!items) return null; // 등록된 제품이 없음
+
+  const item = Array.isArray(items) ? items[0] : items;
+  if (!item || !item.PRDCT_NM) return null;
+
+  return { name: item.PRDCT_NM, consumeTermRaw: item.CPN_TERM_CN || "" };
+}
+
+// 2순위: Open Food Facts API로 조회합니다. 제품명만 제공하고 유통기한 정보는 없습니다.
+async function lookupOpenFoodFacts(barcode) {
+  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    console.warn("[barcode] Open Food Facts 응답 실패:", response.status);
+    return null;
+  }
+
+  const data = await response.json();
+  console.log("[barcode] Open Food Facts 응답:", data); // 디버깅용
+
+  // status === 1 이면 제품을 찾았다는 뜻이고, status === 0 이면 DB에 없다는 뜻입니다.
+  // (둘 다 정상 응답이라 catch로는 안 걸러지고 여기서 직접 구분해야 합니다)
+  const productName = data.product && (data.product.product_name_ko || data.product.product_name);
+  if (data.status !== 1 || !productName) return null;
+
+  return { name: productName };
+}
+
+// 바코드로 제품 정보를 조회합니다. 1순위(푸드QR) -> 2순위(Open Food Facts) 순서로 시도하고,
+// 팝업 없이 안내 문구만 보여줍니다. 둘 다 실패하면 사용자가 직접 입력하도록 그대로 둡니다.
 async function lookupProduct(barcode) {
   barcodeMessage.textContent = "제품 정보를 찾는 중...";
 
   try {
-    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`;
-    const response = await fetch(url);
+    const foodQrResult = await lookupFoodQr(barcode);
+    if (foodQrResult) {
+      nameInput.value = foodQrResult.name;
 
-    // 응답 자체가 200번대가 아니면(서버 오류 등) 바로 실패로 처리합니다.
-    if (!response.ok) {
-      console.warn("[barcode] API 응답 실패:", response.status);
-      barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
+      const parsedDate = parseYmdDate(foodQrResult.consumeTermRaw);
+      if (parsedDate) {
+        // 유통기한 칸을 채우되, 사용자가 보고 직접 고칠 수 있도록 평범한 입력값으로 넣습니다.
+        expiryDateInput.value = parsedDate;
+        barcodeMessage.textContent = "푸드QR에서 제품명과 소비기한을 불러왔어요. 필요하면 수정해도 돼요.";
+      } else if (foodQrResult.consumeTermRaw) {
+        // 소비기한이 "20261231" 같은 날짜가 아니라 "제조일로부터 12개월"처럼 글로 되어 있는 경우:
+        // 날짜 칸에 억지로 넣을 수 없어서, 안내 문구로만 보여주고 직접 계산해서 입력하도록 합니다.
+        barcodeMessage.textContent = `푸드QR에서 제품명을 불러왔어요. (소비기한 안내: ${foodQrResult.consumeTermRaw})`;
+      } else {
+        barcodeMessage.textContent = "푸드QR에서 제품명을 불러왔어요. 필요하면 수정해도 돼요.";
+      }
       return;
     }
+  } catch (error) {
+    console.error("[barcode] 푸드QR 조회 중 오류:", error);
+    // 여기서 안내 문구를 띄우지 않고 조용히 2순위로 넘어갑니다.
+  }
 
-    const data = await response.json();
-    console.log("[barcode] API 응답:", data); // 디버깅용: status 값과 product 유무를 바로 확인할 수 있음
-
-    // status === 1 이면 제품을 찾았다는 뜻이고, status === 0 이면 DB에 없다는 뜻입니다.
-    // (Open Food Facts API 규칙 - 둘 다 정상 응답이라 catch로는 안 걸러지고 여기서 직접 구분해야 합니다)
-    const productName = data.product && (data.product.product_name_ko || data.product.product_name);
-
-    if (data.status === 1 && productName) {
-      nameInput.value = productName;
+  try {
+    const offResult = await lookupOpenFoodFacts(barcode);
+    if (offResult) {
+      nameInput.value = offResult.name;
       barcodeMessage.textContent = "제품 정보를 불러왔어요. 필요하면 이름을 수정해도 돼요.";
-    } else {
-      barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
+      return;
     }
   } catch (error) {
-    // 네트워크 오류, JSON 파싱 실패 등 요청 자체가 실패한 경우도 조용히 같은 안내만 보여줍니다.
-    console.error("[barcode] 조회 중 오류:", error);
-    barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
+    console.error("[barcode] Open Food Facts 조회 중 오류:", error);
   }
+
+  // 두 조회가 모두 실패한 경우
+  barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
 }
 
 scanBtn.addEventListener("click", openScanner);
