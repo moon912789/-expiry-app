@@ -270,7 +270,7 @@ main {
 /* 메인 화면: 카테고리 필터 탭 */
 .category-tabs {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   overflow-x: auto;
   padding-bottom: 4px;
   margin-bottom: 16px;
@@ -283,16 +283,26 @@ main {
   display: none;
 }
 
+/*
+  탭 5개(전체/상온/냉장/냉동/화장품)가 폭 360~400px인 모바일 화면에서도
+  가로 스크롤 없이 한 줄에 들어오도록 flex: 1로 5등분합니다.
+  (min-width: 0을 안 주면 flex 아이템이 내용 길이만큼 늘어나려고 해서
+  일부 탭이 좁아지지 않고 넘칠 수 있어 꼭 같이 넣어야 합니다)
+*/
 .category-tab {
-  flex: none;
-  padding: 8px 14px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 2px;
   border: 1px solid #ccc;
   border-radius: 999px;
   background-color: #fff;
   color: #555;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .category-tab.active {
