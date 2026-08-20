@@ -12,9 +12,11 @@
   버전(v1)을 v2처럼 올려주세요. 그러면 예전 캐시는 activate 단계에서 자동으로 정리됩니다.
 */
 
-const CACHE_NAME = "expiry-app-cache-v2";
+const CACHE_NAME = "expiry-app-cache-v3";
 
 // 앱이 열릴 때 최소한으로 필요한 파일들만 캐시해둡니다.
+// (바코드 스캔에 쓰는 CDN 라이브러리는 우리 사이트와 다른 서버 파일이라 여기 목록에는 넣지 않습니다.
+//  바코드 스캔은 어차피 Open Food Facts 조회에 네트워크가 필요해서 오프라인 지원 대상이 아닙니다)
 const CORE_ASSETS = [
   "index.html",
   "add.html",
@@ -25,6 +27,7 @@ const CORE_ASSETS = [
   "js/main.js",
   "js/form.js",
   "js/calendar.js",
+  "js/barcode.js",
   "manifest.json",
   "icon.svg",
   "icon-192.png",

@@ -27,6 +27,11 @@
       <label for="name">품목명</label>
       <input type="text" id="name" placeholder="예: 우유, 계란, 스킨로션" required>
 
+      <!-- 카메라로 바코드를 찍으면 Open Food Facts에서 제품명을 찾아 위 입력칸에 채워줍니다 -->
+      <button type="button" id="barcode-scan-btn" class="barcode-btn">📷 바코드로 자동 입력</button>
+      <!-- 조회 성공/실패 안내 문구가 뜨는 자리 (팝업 대신 여기에 조용히 표시) -->
+      <p id="barcode-message" class="barcode-message"></p>
+
       <label>카테고리</label>
       <!-- 라디오 버튼을 버튼처럼 꾸민 것입니다. required를 걸어서 하나는 꼭 고르도록 합니다. -->
       <div class="category-options" role="radiogroup" aria-label="카테고리 선택">
@@ -74,8 +79,27 @@
     </form>
   </main>
 
+  <!--
+    바코드 스캔 화면 (평소엔 hidden 속성으로 숨겨져 있다가, "바코드로 자동 입력" 버튼을
+    누르면 js/barcode.js가 hidden을 풀어서 화면 전체를 덮는 카메라 화면을 보여줍니다)
+  -->
+  <div id="barcode-scanner-overlay" class="scanner-overlay" hidden>
+    <div class="scanner-box">
+      <div class="scanner-header">
+        <span>바코드 스캔</span>
+        <button type="button" id="scanner-close-btn" class="scanner-close-btn" aria-label="닫기">✕</button>
+      </div>
+      <!-- html5-qrcode 라이브러리가 이 안에 카메라 영상을 그려줍니다 -->
+      <div id="barcode-reader"></div>
+      <p id="scanner-status" class="scanner-status"></p>
+    </div>
+  </div>
+
   <script src="js/storage.js"></script>
   <script src="js/dateUtils.js"></script>
   <script src="js/form.js"></script>
+  <!-- 바코드 스캔 라이브러리 (npm 설치 없이 CDN에서 바로 불러와서 사용합니다) -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="js/barcode.js"></script>
 </body>
 </html>

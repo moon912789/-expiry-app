@@ -211,6 +211,84 @@ main {
   outline-offset: 2px;
 }
 
+/* 추가/수정 화면: 바코드 스캔 버튼 + 안내 문구 */
+.barcode-btn {
+  margin-top: 8px;
+  padding: 10px 0;
+  border: 1px solid #4caf50;
+  background-color: #fff;
+  color: #4caf50;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.barcode-btn:hover {
+  background-color: #e8f5e9;
+}
+
+.barcode-message {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #777;
+  min-height: 16px; /* 문구가 없을 때도 레이아웃이 안 흔들리도록 자리를 미리 잡아둠 */
+}
+
+/* 바코드 스캔 화면 전체를 덮는 오버레이 */
+.scanner-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+}
+
+/* hidden 속성이 있을 땐 위의 flex보다 이 규칙이 우선하도록 함 (완전히 안 보이게) */
+.scanner-overlay[hidden] {
+  display: none;
+}
+
+.scanner-box {
+  width: 100%;
+  max-width: 400px;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.scanner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.scanner-close-btn {
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: #555;
+  cursor: pointer;
+}
+
+/* html5-qrcode 라이브러리가 이 안에 카메라 영상을 그려 넣음 */
+#barcode-reader {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.scanner-status {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+}
+
 .quick-buttons {
   display: flex;
   gap: 8px;
