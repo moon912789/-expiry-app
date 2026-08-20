@@ -15,6 +15,8 @@ const editId = params.get("id"); // id가 없으면 null -> 추가 모드로 동
 const nameInput = document.getElementById("name");
 const purchaseDateInput = document.getElementById("purchaseDate");
 const expiryDateInput = document.getElementById("expiryDate");
+const alertDaysInput = document.getElementById("alertDays");
+const memoInput = document.getElementById("memo");
 const deleteBtn = document.getElementById("delete-btn");
 const formTitle = document.getElementById("form-title");
 const form = document.getElementById("item-form");
@@ -31,6 +33,15 @@ if (editId) {
     nameInput.value = item.name;
     purchaseDateInput.value = item.purchaseDate;
     expiryDateInput.value = item.expiryDate;
+    alertDaysInput.value = item.alertDays;
+    memoInput.value = item.memo;
+
+    // 카테고리 라디오 버튼 중 이 항목의 카테고리와 같은 것을 선택 상태로 만듭니다.
+    const categoryRadio = document.querySelector(`input[name="category"][value="${item.category}"]`);
+    if (categoryRadio) {
+      categoryRadio.checked = true;
+    }
+
     deleteBtn.style.display = "inline-block"; // 수정 모드에서만 삭제 버튼 표시
   }
 }
@@ -46,6 +57,9 @@ document.querySelectorAll(".quick-btn").forEach((btn) => {
 });
 
 // 폼 제출(저장 버튼 클릭) 처리
+// 카테고리(required 라디오)와 알림일수(required, min/max 숫자)는
+// 브라우저가 기본 제공하는 폼 검사(native validation)로 미리 걸러지기 때문에,
+// 여기서는 카테고리/알림일수 값이 이미 올바르다고 보고 그대로 읽어옵니다.
 form.addEventListener("submit", (event) => {
   event.preventDefault(); // 기본 동작(새로고침)을 막고 우리가 직접 저장 처리
 
@@ -58,10 +72,15 @@ form.addEventListener("submit", (event) => {
     return;
   }
 
+  const categoryRadio = document.querySelector('input[name="category"]:checked');
+  const category = categoryRadio.value;
+  const alertDays = Number(alertDaysInput.value);
+  const memo = memoInput.value.trim();
+
   if (editId) {
-    updateItem({ id: editId, name, purchaseDate, expiryDate });
+    updateItem({ id: editId, name, category, purchaseDate, expiryDate, alertDays, memo });
   } else {
-    addItem({ name, purchaseDate, expiryDate });
+    addItem({ name, category, purchaseDate, expiryDate, alertDays, memo });
   }
 
   // 저장이 끝나면 목록 화면으로 돌아갑니다.

@@ -152,11 +152,63 @@ main {
 }
 
 .item-form input[type="text"],
-.item-form input[type="date"] {
+.item-form input[type="date"],
+.item-form input[type="number"] {
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 6px;
+}
+
+.item-form textarea {
+  padding: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* 추가/수정 화면의 카테고리 선택 (라디오 버튼을 알약 모양 버튼처럼 꾸민 것) */
+.category-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.category-option {
+  position: relative;
+}
+
+.category-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.category-option span {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.category-option input[type="radio"]:checked + span {
+  border-color: #4caf50;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.category-option input[type="radio"]:focus-visible + span {
+  outline: 2px solid #4caf50;
+  outline-offset: 2px;
 }
 
 .quick-buttons {
@@ -198,6 +250,54 @@ main {
   background-color: #fff;
   color: #f44336;
   border: 1px solid #f44336;
+}
+
+/* 메인 화면: "지금 알림 받아야 할 항목" 강조 섹션 */
+.alert-section {
+  margin-bottom: 20px;
+}
+
+.alert-section:empty {
+  margin-bottom: 0;
+}
+
+.alert-heading {
+  font-size: 15px;
+  margin: 0 0 10px;
+  color: #c62828;
+}
+
+/* 메인 화면: 카테고리 필터 탭 */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+}
+
+.category-tab {
+  flex: none;
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  background-color: #fff;
+  color: #555;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.category-tab.active {
+  background-color: #4caf50;
+  border-color: #4caf50;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* 목록 카드: 메모가 있는 항목 옆에 붙는 작은 표시 */
+.memo-badge {
+  font-size: 13px;
 }
 
 /* 캘린더 화면 (calendar.html) */

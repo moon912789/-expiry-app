@@ -27,6 +27,27 @@
       <label for="name">품목명</label>
       <input type="text" id="name" placeholder="예: 우유, 계란, 스킨로션" required>
 
+      <label>카테고리</label>
+      <!-- 라디오 버튼을 버튼처럼 꾸민 것입니다. required를 걸어서 하나는 꼭 고르도록 합니다. -->
+      <div class="category-options" role="radiogroup" aria-label="카테고리 선택">
+        <label class="category-option">
+          <input type="radio" name="category" value="상온" required>
+          <span>🌡️ 상온</span>
+        </label>
+        <label class="category-option">
+          <input type="radio" name="category" value="냉장" required>
+          <span>🧊 냉장</span>
+        </label>
+        <label class="category-option">
+          <input type="radio" name="category" value="냉동" required>
+          <span>❄️ 냉동</span>
+        </label>
+        <label class="category-option">
+          <input type="radio" name="category" value="화장품" required>
+          <span>💄 화장품</span>
+        </label>
+      </div>
+
       <label for="purchaseDate">구매일</label>
       <input type="date" id="purchaseDate" required>
 
@@ -40,6 +61,12 @@
         <button type="button" class="quick-btn" data-days="14">+14일</button>
         <button type="button" class="quick-btn" data-days="30">+30일</button>
       </div>
+
+      <label for="alertDays">며칠 전부터 알림을 받을까요?</label>
+      <input type="number" id="alertDays" min="1" max="30" step="1" value="3" required>
+
+      <label for="memo">메모 (선택)</label>
+      <textarea id="memo" placeholder="예: 냉장고 안쪽 칸, 개봉 후 3일 이내 사용"></textarea>
 
       <button type="submit" class="save-btn">저장</button>
       <!-- 삭제 버튼은 수정 모드일 때만 form.js가 보이도록 만듭니다 -->

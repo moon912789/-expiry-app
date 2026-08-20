@@ -7,18 +7,46 @@
   {
     id: "1699999999999",   // 항목을 구분하는 고유 번호 (문자열)
     name: "우유",           // 품목명
+    category: "냉장",       // 카테고리: 상온/냉장/냉동/화장품 중 하나
     purchaseDate: "2026-08-19", // 구매일 (YYYY-MM-DD)
-    expiryDate: "2026-08-26"    // 유통기한 (YYYY-MM-DD)
+    expiryDate: "2026-08-26",   // 유통기한 (YYYY-MM-DD)
+    alertDays: 3,           // 유통기한 며칠 전부터 알림을 받을지
+    memo: "냉장고 안쪽 칸"    // 메모 (선택 입력)
   }
 */
 
 // localStorage에 저장할 때 사용할 키 이름
 const STORAGE_KEY = "expiryItems";
 
+// 카테고리 종류와 카테고리별 이모지 아이콘
+const CATEGORIES = ["상온", "냉장", "냉동", "화장품"];
+const CATEGORY_ICONS = {
+  상온: "🌡️",
+  냉장: "🧊",
+  냉동: "❄️",
+  화장품: "💄",
+};
+
+// 카테고리/알림일수가 없는 경우(예전에 저장된 데이터)에 사용할 기본값
+const DEFAULT_CATEGORY = "상온";
+const DEFAULT_ALERT_DAYS = 3;
+
+// 예전 버전에서 저장된 항목(카테고리/알림일수/메모가 없음)도 문제없이 쓸 수 있도록
+// 빠진 값에 기본값을 채워서 돌려줍니다.
+function normalizeItem(item) {
+  return {
+    ...item,
+    category: item.category || DEFAULT_CATEGORY,
+    alertDays: item.alertDays || DEFAULT_ALERT_DAYS,
+    memo: item.memo || "",
+  };
+}
+
 // 저장된 모든 항목을 배열로 가져옵니다. 저장된 게 없으면 빈 배열을 반환합니다.
 function getItems() {
   const json = localStorage.getItem(STORAGE_KEY);
-  return json ? JSON.parse(json) : [];
+  const items = json ? JSON.parse(json) : [];
+  return items.map(normalizeItem);
 }
 
 // 항목 배열 전체를 localStorage에 저장합니다.
