@@ -12,7 +12,7 @@
   버전(v1)을 v2처럼 올려주세요. 그러면 예전 캐시는 activate 단계에서 자동으로 정리됩니다.
 */
 
-const CACHE_NAME = "expiry-app-cache-v1";
+const CACHE_NAME = "expiry-app-cache-v2";
 
 // 앱이 열릴 때 최소한으로 필요한 파일들만 캐시해둡니다.
 const CORE_ASSETS = [

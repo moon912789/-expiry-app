@@ -128,13 +128,21 @@ document.querySelectorAll(".category-tab").forEach((tab) => {
 
   navigator.serviceWorker.ready는 "등록된 서비스 워커가 실제로 활성화될 때까지" 기다리는
   Promise입니다. register()가 끝났다고 바로 알림을 보낼 준비가 된 게 아니라서 이 단계가 필요합니다.
+
+  주의: 크롬은 sw.js가 바뀌었는지 보통 "마지막 확인 후 24시간이 지났을 때"만 자동으로
+  다시 확인합니다. 그래서 새로고침만으로는 앱을 수정해도 예전 캐시가 계속 보일 수 있습니다.
+  registration.update()를 직접 호출하면 이 24시간 제한과 상관없이 즉시 새 버전이 있는지
+  확인하기 때문에, 페이지를 열 때마다 호출해서 항상 최신 버전을 받도록 합니다.
 */
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return Promise.resolve(null);
 
   return navigator.serviceWorker
     .register("sw.js")
-    .then(() => navigator.serviceWorker.ready)
+    .then((registration) => {
+      registration.update(); // 새 버전이 있는지 즉시 확인 (결과를 기다리지 않고 백그라운드로 진행)
+      return navigator.serviceWorker.ready;
+    })
     .catch((error) => {
       console.error("서비스 워커 등록 실패:", error);
       return null;
