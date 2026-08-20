@@ -274,6 +274,13 @@ main {
   overflow-x: auto;
   padding-bottom: 4px;
   margin-bottom: 16px;
+  scrollbar-width: none; /* 파이어폭스: 스크롤바 숨기기 */
+  -ms-overflow-style: none; /* 구형 엣지/IE: 스크롤바 숨기기 */
+}
+
+/* 크롬/사파리 등 웹킷 계열 브라우저: 스크롤바 숨기기 */
+.category-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .category-tab {
