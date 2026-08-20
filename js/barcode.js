@@ -35,7 +35,18 @@ function openScanner() {
   scannerStatus.textContent = "카메라를 켜는 중...";
   scannerOverlay.hidden = false;
 
-  const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+  const config = {
+    fps: 10,
+    // 인식 영역을 고정 크기(250x250)로 두면 카메라 화면보다 커서 인식이 안 되는
+    // 경우가 있어서, 실제 카메라 화면 크기에 비례해서 계산하도록 바꿨습니다.
+    // 바코드는 가로로 긴 모양이라 세로보다 가로를 더 넓게 잡습니다.
+    qrbox: (viewfinderWidth, viewfinderHeight) => {
+      const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+      const boxWidth = Math.floor(minEdge * 0.85);
+      const boxHeight = Math.floor(boxWidth * 0.55);
+      return { width: boxWidth, height: boxHeight };
+    },
+  };
 
   html5QrCode
     // facingMode: "environment" -> 스마트폰의 후면(바깥쪽) 카메라를 우선 사용합니다.
@@ -51,16 +62,27 @@ function openScanner() {
     });
 }
 
-// 카메라를 끄고 스캐너 화면을 닫습니다. (✕ 버튼, 스캔 성공, 스캔 실패 모두 여기를 거칩니다)
+// 카메라를 끄고 스캐너 화면을 닫습니다. (✕ 버튼을 눌렀을 때 사용)
 function closeScanner() {
   scannerOverlay.hidden = true;
+  stopCamera();
+}
 
+// 카메라만 멈춥니다. html5-qrcode는 "스캔 성공 콜백 안에서 곧바로 stop()을 호출하면
+// 내부 상태 전환 중이라 에러를 던지는" 경우가 있어서, try/catch로 반드시 감싸야 합니다.
+// (이 에러를 못 잡으면 뒤에 있는 lookupProduct() 호출까지 통째로 멈춰버립니다 -
+//  실패 안내 문구가 안 뜨던 원인이 바로 이것이었습니다)
+function stopCamera() {
   if (!isScanning) return;
   isScanning = false;
 
-  html5QrCode.stop().catch(() => {
-    // 이미 멈춰 있는 상태 등은 그냥 무시합니다.
-  });
+  try {
+    html5QrCode.stop().catch((error) => {
+      console.error("[barcode] 카메라 정지 중 오류(무시하고 진행):", error);
+    });
+  } catch (error) {
+    console.error("[barcode] 카메라 정지 호출 자체가 실패(무시하고 진행):", error);
+  }
 }
 
 // 한 프레임에서 바코드/QR코드를 못 찾았을 때마다 계속 호출되는 콜백이라,
@@ -69,7 +91,14 @@ function onScanFailure() {}
 
 // 바코드/QR코드 인식에 성공했을 때 호출됩니다. decodedText가 인식된 번호(문자열)입니다.
 function onScanSuccess(decodedText) {
-  closeScanner();
+  // 디버깅용: 인식 자체가 되는지(카메라 문제) vs 조회가 안 되는지(API 문제) 구분하기 위한 로그
+  console.log("[barcode] 스캔된 값:", decodedText);
+
+  // 화면을 먼저 닫고(사용자 경험), 카메라 정지는 실패해도 무시되도록 분리해서 처리합니다.
+  scannerOverlay.hidden = true;
+  stopCamera();
+
+  // 카메라 정지가 어떻게 되든 상관없이 조회는 항상 진행되어야 합니다.
   lookupProduct(decodedText);
 }
 
@@ -82,9 +111,19 @@ async function lookupProduct(barcode) {
   try {
     const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`;
     const response = await fetch(url);
-    const data = await response.json();
 
-    // status === 1 이면 제품을 찾았다는 뜻입니다. (Open Food Facts API 규칙)
+    // 응답 자체가 200번대가 아니면(서버 오류 등) 바로 실패로 처리합니다.
+    if (!response.ok) {
+      console.warn("[barcode] API 응답 실패:", response.status);
+      barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
+      return;
+    }
+
+    const data = await response.json();
+    console.log("[barcode] API 응답:", data); // 디버깅용: status 값과 product 유무를 바로 확인할 수 있음
+
+    // status === 1 이면 제품을 찾았다는 뜻이고, status === 0 이면 DB에 없다는 뜻입니다.
+    // (Open Food Facts API 규칙 - 둘 다 정상 응답이라 catch로는 안 걸러지고 여기서 직접 구분해야 합니다)
     const productName = data.product && (data.product.product_name_ko || data.product.product_name);
 
     if (data.status === 1 && productName) {
@@ -94,7 +133,8 @@ async function lookupProduct(barcode) {
       barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
     }
   } catch (error) {
-    // 네트워크 오류 등으로 조회 자체가 실패한 경우도 조용히 같은 안내만 보여줍니다.
+    // 네트워크 오류, JSON 파싱 실패 등 요청 자체가 실패한 경우도 조용히 같은 안내만 보여줍니다.
+    console.error("[barcode] 조회 중 오류:", error);
     barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
   }
 }
