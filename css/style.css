@@ -234,6 +234,17 @@ main {
   min-height: 16px; /* 문구가 없을 때도 레이아웃이 안 흔들리도록 자리를 미리 잡아둠 */
 }
 
+/* 바코드 스캔으로 유통기한이 자동 입력됐을 때, 그 값을 그대로 믿지 말라는 주의 문구 */
+.expiry-notice {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #b28704;
+}
+
+.expiry-notice:empty {
+  margin: 0;
+}
+
 /* 바코드 스캔 화면 전체를 덮는 오버레이 */
 .scanner-overlay {
   position: fixed;

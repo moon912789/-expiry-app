@@ -59,6 +59,8 @@
 
       <label for="expiryDate">유통기한</label>
       <input type="date" id="expiryDate" required>
+      <!-- 바코드 스캔으로 날짜가 자동 입력됐을 때만 barcode.js가 이 자리에 주의 문구를 띄웁니다 -->
+      <p id="expiry-auto-notice" class="expiry-notice"></p>
 
       <!-- 구매일 기준으로 며칠 뒤인지 버튼으로 빠르게 선택할 수 있습니다 -->
       <div class="quick-buttons">

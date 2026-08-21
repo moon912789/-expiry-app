@@ -28,6 +28,7 @@ const scannerOverlay = document.getElementById("barcode-scanner-overlay");
 const scannerCloseBtn = document.getElementById("scanner-close-btn");
 const scannerStatus = document.getElementById("scanner-status");
 const barcodeMessage = document.getElementById("barcode-message");
+const expiryAutoNotice = document.getElementById("expiry-auto-notice");
 
 // CDN 스크립트가 어떤 이유로든 로드되지 않았을 수 있어서, 있는지부터 확인합니다.
 const html5QrCode = "Html5Qrcode" in window ? new Html5Qrcode("barcode-reader") : null;
@@ -42,6 +43,7 @@ function openScanner() {
   }
 
   barcodeMessage.textContent = "";
+  expiryAutoNotice.textContent = "";
   scannerStatus.textContent = "카메라를 켜는 중...";
   scannerOverlay.hidden = false;
 
@@ -119,13 +121,19 @@ function parseYmdDate(text) {
   return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
 }
 
-// 1순위: 식약처 푸드QR 정보서비스(getFoodQrIndctInfo01)로 조회합니다.
-// 제품표시명(PRDCT_NM)과 소비기한(CPN_TERM_CN)을 갖고 있으면 그 값을 돌려주고,
+// 1순위: 식약처 푸드QR 정보서비스(getFoodQrIndctInfo01)는 호출 오류가 잦아서
+// getFoodQrProdList01(푸드QR 목록정보)로 대신 조회합니다.
+// 제품명(PRDT_NM)과 유효종료일자(VLD_END_YMD)를 갖고 있으면 그 값을 돌려주고,
 // 못 찾았거나 요청 자체가 실패하면 null을 돌려줍니다. (에러를 던지지 않고 null로 알려줌)
+//
+// 주의: VLD_END_YMD는 이름과 달리 "식품의 실제 소비기한"이 아니라
+// "이 QR 데이터(라벨 정보)가 유효한 기간"에 가깝습니다. 실제로 조회해보면 이미 지난 날짜이거나
+// "99991231"(무기한) 같은 값이 도시락, 샌드위치 같은 신선식품에도 붙어있어서, 실제 소비기한과는
+// 다른 값일 가능성이 높습니다. 그래서 자동으로 채우되 반드시 사용자에게 경고 문구를 보여줍니다.
 async function lookupFoodQr(barcode) {
   const params = new URLSearchParams({ type: "json", numOfRows: "1", pageNo: "1", brcd_no: barcode });
   // serviceKey는 이미 인코딩되어 있어서 URLSearchParams로 만들지 않고 문자열로 직접 붙입니다.
-  const url = `https://apis.data.go.kr/1471000/FoodQrInfoService01/getFoodQrIndctInfo01?serviceKey=${FOOD_QR_SERVICE_KEY}&${params.toString()}`;
+  const url = `https://apis.data.go.kr/1471000/FoodQrInfoService01/getFoodQrProdList01?serviceKey=${FOOD_QR_SERVICE_KEY}&${params.toString()}`;
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -137,19 +145,20 @@ async function lookupFoodQr(barcode) {
   console.log("[barcode] 푸드QR API 응답:", data); // 디버깅용
 
   if (!data.header || data.header.resultCode !== "00") {
-    // 이 API가 정부 서버 쪽 사정으로 에러를 낼 때가 있습니다(예: "System Error!!").
-    // 우리 쪽 코드 문제가 아니라 API 응답 자체가 실패라서, 실패로 보고 2순위로 넘어갑니다.
     console.warn("[barcode] 푸드QR API 에러 응답:", data.header && data.header.resultMsg);
     return null;
   }
 
-  const items = data.body && data.body.items && data.body.items.item;
+  // 실제 응답에서는 items가 배열로 바로 오지만(items: [...]), 문서상 모델은 items.item 형태라
+  // 두 경우를 모두 처리합니다.
+  const rawItems = data.body && data.body.items;
+  const items = Array.isArray(rawItems) ? rawItems : rawItems && rawItems.item;
   if (!items) return null; // 등록된 제품이 없음
 
   const item = Array.isArray(items) ? items[0] : items;
-  if (!item || !item.PRDCT_NM) return null;
+  if (!item || !item.PRDT_NM) return null;
 
-  return { name: item.PRDCT_NM, consumeTermRaw: item.CPN_TERM_CN || "" };
+  return { name: item.PRDT_NM, validEndYmd: item.VLD_END_YMD || "" };
 }
 
 // 2순위: Open Food Facts API로 조회합니다. 제품명만 제공하고 유통기한 정보는 없습니다.
@@ -177,21 +186,22 @@ async function lookupOpenFoodFacts(barcode) {
 // 팝업 없이 안내 문구만 보여줍니다. 둘 다 실패하면 사용자가 직접 입력하도록 그대로 둡니다.
 async function lookupProduct(barcode) {
   barcodeMessage.textContent = "제품 정보를 찾는 중...";
+  expiryAutoNotice.textContent = ""; // 이전 스캔에서 남은 주의 문구를 지웁니다.
 
   try {
     const foodQrResult = await lookupFoodQr(barcode);
     if (foodQrResult) {
       nameInput.value = foodQrResult.name;
 
-      const parsedDate = parseYmdDate(foodQrResult.consumeTermRaw);
+      const parsedDate = parseYmdDate(foodQrResult.validEndYmd);
       if (parsedDate) {
         // 유통기한 칸을 채우되, 사용자가 보고 직접 고칠 수 있도록 평범한 입력값으로 넣습니다.
         expiryDateInput.value = parsedDate;
-        barcodeMessage.textContent = "푸드QR에서 제품명과 소비기한을 불러왔어요. 필요하면 수정해도 돼요.";
-      } else if (foodQrResult.consumeTermRaw) {
-        // 소비기한이 "20261231" 같은 날짜가 아니라 "제조일로부터 12개월"처럼 글로 되어 있는 경우:
-        // 날짜 칸에 억지로 넣을 수 없어서, 안내 문구로만 보여주고 직접 계산해서 입력하도록 합니다.
-        barcodeMessage.textContent = `푸드QR에서 제품명을 불러왔어요. (소비기한 안내: ${foodQrResult.consumeTermRaw})`;
+        barcodeMessage.textContent = "푸드QR에서 제품명과 참고 날짜를 불러왔어요.";
+        // VLD_END_YMD는 실제로는 "QR 데이터 유효기간"에 가까워서 소비기한과 다를 수 있습니다.
+        // 그래서 채워진 날짜 바로 아래에 반드시 이 주의 문구를 같이 보여줍니다.
+        expiryAutoNotice.textContent =
+          "⚠️ 자동 입력된 날짜예요. 제품 포장에 적힌 실제 유통기한과 다를 수 있으니 확인 후 저장해주세요.";
       } else {
         barcodeMessage.textContent = "푸드QR에서 제품명을 불러왔어요. 필요하면 수정해도 돼요.";
       }
