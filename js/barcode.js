@@ -48,16 +48,30 @@ function openScanner() {
   scannerOverlay.hidden = false;
 
   const config = {
-    fps: 10,
+    // 초당 인식 시도 횟수. 기본값(10)도 나쁘지 않지만, 일반 바코드는 QR코드보다
+    // 스캔 각도/거리에 더 예민해서 조금 더 자주 시도하도록 올렸습니다.
+    fps: 15,
     // 인식 영역을 고정 크기(250x250)로 두면 카메라 화면보다 커서 인식이 안 되는
-    // 경우가 있어서, 실제 카메라 화면 크기에 비례해서 계산하도록 바꿨습니다.
-    // 바코드는 가로로 긴 모양이라 세로보다 가로를 더 넓게 잡습니다.
+    // 경우가 있어서, 실제 카메라 화면 크기에 비례해서 계산하도록 했습니다.
+    // 일반 바코드(EAN/UPC 등)는 가로로 긴 모양이라, 세로 폭을 확 좁혀서
+    // 가로가 긴 직사각형(대략 280x120 비율)에 가깝게 잡습니다.
     qrbox: (viewfinderWidth, viewfinderHeight) => {
       const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-      const boxWidth = Math.floor(minEdge * 0.85);
-      const boxHeight = Math.floor(boxWidth * 0.55);
+      const boxWidth = Math.floor(minEdge * 0.9);
+      const boxHeight = Math.floor(boxWidth * 0.43); // 280:120 ≈ 0.43 비율
       return { width: boxWidth, height: boxHeight };
     },
+    // 인식할 형식을 명시적으로 지정합니다. 지정하지 않으면 라이브러리가 지원하는
+    // 모든 형식을 다 시도하느라 한 프레임을 처리하는 데 시간이 더 걸릴 수 있어서,
+    // 실제로 쓸 QR코드 + 일반 상품 바코드 형식만 골라서 인식 속도와 정확도를 높였습니다.
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+    ],
   };
 
   html5QrCode
