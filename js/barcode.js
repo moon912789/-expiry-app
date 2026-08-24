@@ -147,19 +147,27 @@ function parseYmdDate(text) {
 async function lookupFoodQr(barcode) {
   const params = new URLSearchParams({ type: "json", numOfRows: "1", pageNo: "1", brcd_no: barcode });
   // serviceKey는 이미 인코딩되어 있어서 URLSearchParams로 만들지 않고 문자열로 직접 붙입니다.
+  // (여기에 넣지 않고 URLSearchParams({ serviceKey: ... })로 만들면 %2B 같은 문자가 %252B로
+  //  다시 인코딩되어 인증 오류가 납니다 - 아래 로그로 실제 전송되는 URL을 눈으로 확인할 수 있습니다)
   const url = `https://apis.data.go.kr/1471000/FoodQrInfoService01/getFoodQrProdList01?serviceKey=${FOOD_QR_SERVICE_KEY}&${params.toString()}`;
+  console.log("[barcode] 푸드QR 요청 URL:", url); // 디버깅용: serviceKey가 이중 인코딩됐는지(%25가 있는지) 여기서 확인 가능
 
   const response = await fetch(url);
   if (!response.ok) {
-    console.warn("[barcode] 푸드QR API 응답 실패:", response.status);
+    console.warn("[barcode] 푸드QR API 응답 실패(HTTP 상태 오류):", response.status);
     return null;
   }
 
   const data = await response.json();
-  console.log("[barcode] 푸드QR API 응답:", data); // 디버깅용
+  console.log("[barcode] 푸드QR API 응답:", data); // 디버깅용: resultCode/resultMsg로 인증키 오류 여부 확인 가능
 
   if (!data.header || data.header.resultCode !== "00") {
-    console.warn("[barcode] 푸드QR API 에러 응답:", data.header && data.header.resultMsg);
+    console.warn(
+      "[barcode] 푸드QR API 에러 응답 - resultCode:",
+      data.header && data.header.resultCode,
+      "/ resultMsg:",
+      data.header && data.header.resultMsg
+    );
     return null;
   }
 
