@@ -216,6 +216,28 @@ function initNotifications(alertItems) {
   });
 }
 
+// 목록을 다시 그리고, 알림이 필요한 항목이 있으면 알림을 시도합니다.
+// (페이지를 처음 열 때는 물론, 아래 visibilitychange에서도 이 함수를 다시 호출합니다)
+function refreshListAndNotifications() {
+  renderList();
+  initNotifications(computeAlertItems(getItems()));
+}
+
+/*
+  PWA(홈 화면에 추가해서 쓰는 앱)는 다음 날 다시 열어도 브라우저가 페이지를
+  완전히 새로고침하지 않고, 어제 백그라운드에 있던 화면을 그대로 다시 보여주기만
+  하는 경우가 많습니다. 이때는 위의 renderList()/initNotifications() 호출이
+  다시 실행되지 않아서 "오늘 날짜"가 갱신되지 않고, 그날의 알림도 확인하지 않습니다.
+  (그래서 앱을 켠 첫날만 알림이 오고 그 다음부터는 안 오는 문제가 생겼습니다)
+
+  visibilitychange 이벤트는 화면이 다시 보이는(포그라운드로 돌아오는) 시점에
+  항상 발생하므로, 이때마다 목록/알림을 다시 확인하도록 합니다.
+*/
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    refreshListAndNotifications();
+  }
+});
+
 // 페이지가 열리자마자 목록을 그리고, 알림이 필요한 항목이 있으면 알림을 시도합니다.
-renderList();
-initNotifications(computeAlertItems(getItems()));
+refreshListAndNotifications();
