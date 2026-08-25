@@ -251,9 +251,11 @@ main {
   inset: 0;
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* 화면 중앙이 아니라 위쪽에 붙여서, 화면 아래쪽(디버깅 도구 등)에
+                               가려지지 않고 카메라 화면이 항상 온전히 보이도록 합니다 */
   justify-content: center;
   padding: 16px;
+  padding-top: 8vh;
   z-index: 100;
 }
 
@@ -265,6 +267,9 @@ main {
 .scanner-box {
   width: 100%;
   max-width: 400px;
+  max-height: 75vh; /* 화면 아래쪽에 다른 요소(예: [테스트용] eruda 디버깅 패널)가
+                        떠 있어도 카메라 화면이 그 뒤로 가려지지 않도록 상한선을 둡니다 */
+  overflow-y: auto; /* 내용이 상한선보다 커지는 드문 경우에도 잘리지 않고 스크롤되게 함 */
   background-color: #fff;
   border-radius: 12px;
   padding: 16px;

@@ -23,10 +23,12 @@
     // 그래서 eruda 내부의 shadowRoot 안에 직접 <style>을 넣어줍니다.
     // max-height를 쓰면(높이를 고정하지 않고) 사용자가 손으로 더 작게 줄이는 것도
     // 그대로 되면서, 기본값(80%)이나 리사이즈로 다시 커지는 것만 막아줍니다.
+    // add.html에는 바코드 스캔 카메라 화면도 같이 뜨기 때문에, eruda 패널을
+    // 더 작게(화면의 32% 정도) 잡아서 카메라 화면 아래쪽이 가려지지 않게 합니다.
     var erudaShadowRoot = document.getElementById("eruda").shadowRoot;
     var erudaSizeStyle = document.createElement("style");
     erudaSizeStyle.textContent =
-      ".eruda-dev-tools { max-height: 45vh !important; }";
+      ".eruda-dev-tools { max-height: 32vh !important; }";
     erudaShadowRoot.appendChild(erudaSizeStyle);
   </script>
   <!-- ===== [테스트용, 나중에 제거] eruda 모바일 디버깅 도구 끝 ===== -->
