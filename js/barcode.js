@@ -34,10 +34,17 @@ const expiryAutoNotice = document.getElementById("expiry-auto-notice");
 const html5QrCode = "Html5Qrcode" in window ? new Html5Qrcode("barcode-reader") : null;
 
 let isScanning = false; // 지금 카메라가 켜져서 인식 중인지 여부
+let hasLoggedScanAttempt = false; // "인식 시도 중" 로그를 스캔 세션당 한 번만 남기기 위한 플래그
 
 // "바코드로 자동 입력" 버튼을 누르면 카메라 화면을 엽니다.
 function openScanner() {
+  console.log("[barcode] 바코드 스캔 버튼 클릭됨, 카메라 시작 시도");
+
   if (!html5QrCode) {
+    // CDN에서 html5-qrcode 스크립트 자체가 안 불러와진 경우입니다. (예: CDN 접속 실패)
+    // 이 경로에서는 원래 콘솔에 아무 로그도 안 남아서 "왜 아무 반응이 없지?"를
+    // 알 수 없었던 문제가 있었습니다.
+    console.error("[barcode] html5-qrcode 라이브러리가 로드되지 않았어요. (CDN 스크립트 로드 실패 가능성)");
     barcodeMessage.textContent = "이 브라우저에서는 바코드 스캔을 쓸 수 없어요. 직접 입력해주세요.";
     return;
   }
@@ -78,11 +85,16 @@ function openScanner() {
     // facingMode: "environment" -> 스마트폰의 후면(바깥쪽) 카메라를 우선 사용합니다.
     .start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
     .then(() => {
+      console.log("[barcode] 카메라 활성화 성공, 스캔 대기 중");
       isScanning = true;
       scannerStatus.textContent = "바코드를 카메라에 비춰주세요";
+      hasLoggedScanAttempt = false; // 이번 스캔 세션에서 "인식 시도 중" 로그를 다시 한 번 남길 수 있게 초기화
     })
-    .catch(() => {
-      // 카메라 권한을 거부했거나, PC처럼 카메라가 없는 환경인 경우
+    .catch((error) => {
+      // 카메라 권한을 거부했거나, PC처럼 카메라가 없는 환경인 경우입니다.
+      // 예전에는 이 상황에서 화면에는 안내 문구가 떴지만 콘솔에는 아무 로그도 안 남아서,
+      // "콘솔에 로그가 아예 안 보인다"는 문제의 실제 원인이 대부분 여기였습니다.
+      console.error("[barcode] 카메라 시작 실패:", error);
       closeScanner();
       barcodeMessage.textContent = "카메라를 사용할 수 없어요. 직접 입력해주세요.";
     });
@@ -111,9 +123,15 @@ function stopCamera() {
   }
 }
 
-// 한 프레임에서 바코드/QR코드를 못 찾았을 때마다 계속 호출되는 콜백이라,
-// 실제 "에러"가 아니라 "아직 못 찾음"에 가깝습니다. 그래서 아무것도 하지 않습니다.
-function onScanFailure() {}
+// 한 프레임에서 바코드/QR코드를 못 찾았을 때마다 계속(초당 여러 번) 호출되는
+// 콜백이라, 실제 "에러"가 아니라 "아직 못 찾음"에 가깝습니다. 매 프레임마다 로그를
+// 남기면 콘솔이 순식간에 도배되어 정작 필요한 로그를 찾기 어려워지므로, 카메라가
+// 켜진 뒤 한 번만("인식을 계속 시도하고 있다"는 확인용으로) 로그를 남깁니다.
+function onScanFailure() {
+  if (hasLoggedScanAttempt) return;
+  hasLoggedScanAttempt = true;
+  console.log("[barcode] 카메라가 바코드 인식을 계속 시도하고 있어요. (아직 인식 안 됨)");
+}
 
 // 바코드/QR코드 인식에 성공했을 때 호출됩니다. decodedText가 인식된 번호(문자열)입니다.
 function onScanSuccess(decodedText) {
