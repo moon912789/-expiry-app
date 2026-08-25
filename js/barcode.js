@@ -145,6 +145,8 @@ function parseYmdDate(text) {
 // "99991231"(무기한) 같은 값이 도시락, 샌드위치 같은 신선식품에도 붙어있어서, 실제 소비기한과는
 // 다른 값일 가능성이 높습니다. 그래서 자동으로 채우되 반드시 사용자에게 경고 문구를 보여줍니다.
 async function lookupFoodQr(barcode) {
+  console.log("[barcode] 푸드QR 호출 시작, 바코드:", barcode);
+
   const params = new URLSearchParams({ type: "json", numOfRows: "1", pageNo: "1", brcd_no: barcode });
   // serviceKey는 이미 인코딩되어 있어서 URLSearchParams로 만들지 않고 문자열로 직접 붙입니다.
   // (여기에 넣지 않고 URLSearchParams({ serviceKey: ... })로 만들면 %2B 같은 문자가 %252B로
@@ -152,13 +154,30 @@ async function lookupFoodQr(barcode) {
   const url = `https://apis.data.go.kr/1471000/FoodQrInfoService01/getFoodQrProdList01?serviceKey=${FOOD_QR_SERVICE_KEY}&${params.toString()}`;
   console.log("[barcode] 푸드QR 요청 URL:", url); // 디버깅용: serviceKey가 이중 인코딩됐는지(%25가 있는지) 여기서 확인 가능
 
-  const response = await fetch(url);
+  // fetch 자체를 try/catch로 감쌉니다. 네트워크가 끊겼거나(오프라인), CORS 정책에
+  // 막혔거나 하면 fetch()가 응답 대신 예외를 던지는데, 이 경우까지 놓치지 않고
+  // 반드시 콘솔에 에러를 남기기 위해서입니다. (HTTP 200/404 같은 "정상 응답"과는
+  // 다른 종류의 실패라서 분리해서 로그를 남깁니다)
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    console.error("[barcode] 푸드QR 호출 자체가 실패했어요(네트워크/CORS 등):", error);
+    return null;
+  }
+
   if (!response.ok) {
     console.warn("[barcode] 푸드QR API 응답 실패(HTTP 상태 오류):", response.status);
     return null;
   }
 
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    console.error("[barcode] 푸드QR 응답을 JSON으로 해석하는 데 실패했어요:", error);
+    return null;
+  }
   console.log("[barcode] 푸드QR API 응답:", data); // 디버깅용: resultCode/resultMsg로 인증키 오류 여부 확인 가능
 
   if (!data.header || data.header.resultCode !== "00") {
@@ -185,15 +204,32 @@ async function lookupFoodQr(barcode) {
 
 // 2순위: Open Food Facts API로 조회합니다. 제품명만 제공하고 유통기한 정보는 없습니다.
 async function lookupOpenFoodFacts(barcode) {
-  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`;
-  const response = await fetch(url);
+  console.log("[barcode] Open Food Facts 호출 시작, 바코드:", barcode);
 
-  if (!response.ok) {
-    console.warn("[barcode] Open Food Facts 응답 실패:", response.status);
+  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`;
+  console.log("[barcode] Open Food Facts 요청 URL:", url);
+
+  // 푸드QR과 마찬가지로, fetch 자체의 실패(네트워크/CORS 등)를 놓치지 않도록 별도로 감쌉니다.
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    console.error("[barcode] Open Food Facts 호출 자체가 실패했어요(네트워크/CORS 등):", error);
     return null;
   }
 
-  const data = await response.json();
+  if (!response.ok) {
+    console.warn("[barcode] Open Food Facts 응답 실패(HTTP 상태 오류):", response.status);
+    return null;
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    console.error("[barcode] Open Food Facts 응답을 JSON으로 해석하는 데 실패했어요:", error);
+    return null;
+  }
   console.log("[barcode] Open Food Facts 응답:", data); // 디버깅용
 
   // status === 1 이면 제품을 찾았다는 뜻이고, status === 0 이면 DB에 없다는 뜻입니다.
