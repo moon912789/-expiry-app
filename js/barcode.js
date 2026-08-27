@@ -36,6 +36,14 @@ const html5QrCode = "Html5Qrcode" in window ? new Html5Qrcode("barcode-reader") 
 let isScanning = false; // 지금 카메라가 켜져서 인식 중인지 여부
 let hasLoggedScanAttempt = false; // "인식 시도 중" 로그를 스캔 세션당 한 번만 남기기 위한 플래그
 
+// ---- 연속 인식 검증(오인식 방지) ----
+// 화면이 흔들리거나 다른 텍스트/패턴이 순간적으로 바코드처럼 잘못 인식될 수 있어서,
+// "같은 값이 3번 연속으로 인식됐을 때"만 진짜 결과로 확정합니다. 값이 중간에
+// 바뀌면(예: 처음 두 번은 A, 세 번째는 B) 카운트를 1부터 다시 셉니다.
+const REQUIRED_CONSECUTIVE_MATCHES = 3;
+let lastDecodedValue = null;
+let consecutiveMatchCount = 0;
+
 // "바코드로 자동 입력" 버튼을 누르면 카메라 화면을 엽니다.
 function openScanner() {
   console.log("[barcode] 바코드 스캔 버튼 클릭됨, 카메라 시작 시도");
@@ -54,18 +62,23 @@ function openScanner() {
   scannerStatus.textContent = "카메라를 켜는 중...";
   scannerOverlay.hidden = false;
 
+  // 새로 스캔을 시작할 때마다 연속 인식 카운트를 초기화합니다.
+  lastDecodedValue = null;
+  consecutiveMatchCount = 0;
+
   const config = {
-    // 초당 인식 시도 횟수. 기본값(10)도 나쁘지 않지만, 일반 바코드는 QR코드보다
-    // 스캔 각도/거리에 더 예민해서 조금 더 자주 시도하도록 올렸습니다.
+    // 초당 인식 시도 횟수. 너무 높으면 흔들림(모션 블러)에 더 취약해질 수 있어서
+    // 15 정도로 적당한 값을 유지합니다.
     fps: 15,
     // 인식 영역을 고정 크기(250x250)로 두면 카메라 화면보다 커서 인식이 안 되는
     // 경우가 있어서, 실제 카메라 화면 크기에 비례해서 계산하도록 했습니다.
-    // 일반 바코드(EAN/UPC 등)는 가로로 긴 모양이라, 세로 폭을 확 좁혀서
-    // 가로가 긴 직사각형(대략 280x120 비율)에 가깝게 잡습니다.
+    // 일반 바코드(EAN/UPC 등)는 가로로 긴 모양이라 세로 폭을 좁혀서 직사각형으로
+    // 잡되, 실제 바코드 크기보다 영역이 너무 크면 주변의 다른 텍스트/패턴까지
+    // 같이 잡혀서 엉뚱한 값이 인식될 수 있어 영역을 이전보다 더 좁혔습니다.
     qrbox: (viewfinderWidth, viewfinderHeight) => {
       const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-      const boxWidth = Math.floor(minEdge * 0.9);
-      const boxHeight = Math.floor(boxWidth * 0.43); // 280:120 ≈ 0.43 비율
+      const boxWidth = Math.min(Math.floor(minEdge * 0.7), 280);
+      const boxHeight = Math.floor(boxWidth * 0.35);
       return { width: boxWidth, height: boxHeight };
     },
     // 인식할 형식을 명시적으로 지정합니다. 지정하지 않으면 라이브러리가 지원하는
@@ -79,10 +92,23 @@ function openScanner() {
       Html5QrcodeSupportedFormats.UPC_E,
       Html5QrcodeSupportedFormats.CODE_128,
     ],
+    // videoConstraints를 지정하면 다른 카메라 설정(첫 번째 인자로 넘긴 facingMode 등)보다
+    // 이 값이 우선 적용됩니다. 화면이 뿌옇게 나오는 문제를 줄이기 위해 해상도를
+    // 명시적으로 높게 요청하고, 지원하는 기기에서는 자동 초점이 계속 맞춰지도록
+    // focusMode도 함께 요청합니다. (요청한 해상도/초점 모드를 기기가 지원하지 않으면
+    // 브라우저가 알아서 무시하고 기본값으로 동작하므로, 안 되는 기기에서도 에러는 나지 않습니다)
+    videoConstraints: {
+      facingMode: "environment",
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+      focusMode: "continuous",
+    },
   };
 
   html5QrCode
     // facingMode: "environment" -> 스마트폰의 후면(바깥쪽) 카메라를 우선 사용합니다.
+    // (위 config.videoConstraints가 있으면 이 값보다 그쪽이 우선 적용되지만,
+    //  videoConstraints를 지원하지 않는 옛날 버전 라이브러리를 위한 대비용으로 남겨둡니다)
     .start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
     .then(() => {
       console.log("[barcode] 카메라 활성화 성공, 스캔 대기 중");
@@ -133,10 +159,30 @@ function onScanFailure() {
   console.log("[barcode] 카메라가 바코드 인식을 계속 시도하고 있어요. (아직 인식 안 됨)");
 }
 
-// 바코드/QR코드 인식에 성공했을 때 호출됩니다. decodedText가 인식된 번호(문자열)입니다.
+// 바코드/QR코드가 "한 프레임에서" 인식됐을 때 호출됩니다. decodedText가 인식된 번호(문자열)입니다.
+// 흔들림이나 주변 텍스트 때문에 순간적으로 엉뚱한 값이 인식될 수 있어서, 여기서는
+// 바로 확정하지 않고 같은 값이 REQUIRED_CONSECUTIVE_MATCHES(3)번 연속으로 나와야만
+// 진짜 결과로 받아들입니다. (confirmScannedBarcode에서 최종 확정 처리를 합니다)
 function onScanSuccess(decodedText) {
-  // 디버깅용: 인식 자체가 되는지(카메라 문제) vs 조회가 안 되는지(API 문제) 구분하기 위한 로그
-  console.log("[barcode] 스캔된 값:", decodedText);
+  if (decodedText === lastDecodedValue) {
+    consecutiveMatchCount += 1;
+  } else {
+    // 이전과 다른 값이 나왔다는 건 둘 중 하나(또는 둘 다)가 오인식이었다는 뜻이라,
+    // 카운트를 이 값 기준으로 1부터 다시 셉니다.
+    lastDecodedValue = decodedText;
+    consecutiveMatchCount = 1;
+  }
+
+  console.log(
+    `[barcode] 스캔된 값: ${decodedText} (연속 ${consecutiveMatchCount}/${REQUIRED_CONSECUTIVE_MATCHES}회 일치)`
+  );
+  scannerStatus.textContent = `인식 확인 중... (${consecutiveMatchCount}/${REQUIRED_CONSECUTIVE_MATCHES})`;
+
+  if (consecutiveMatchCount < REQUIRED_CONSECUTIVE_MATCHES) {
+    return; // 아직 확정할 만큼 충분히 반복되지 않았으므로 스캔을 계속 이어갑니다.
+  }
+
+  console.log("[barcode] 연속 인식 확인 완료, 최종 값으로 확정:", decodedText);
 
   // 화면을 먼저 닫고(사용자 경험), 카메라 정지는 실패해도 무시되도록 분리해서 처리합니다.
   scannerOverlay.hidden = true;
