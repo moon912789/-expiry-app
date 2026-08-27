@@ -98,13 +98,16 @@ function openScanner() {
     ],
     // videoConstraints를 지정하면 다른 카메라 설정(첫 번째 인자로 넘긴 facingMode 등)보다
     // 이 값이 우선 적용됩니다. 화면이 뿌옇게 나오는 문제를 줄이기 위해 해상도를
-    // 명시적으로 높게 요청하고, 지원하는 기기에서는 자동 초점이 계속 맞춰지도록
-    // focusMode도 함께 요청합니다. (요청한 해상도/초점 모드를 기기가 지원하지 않으면
-    // 브라우저가 알아서 무시하고 기본값으로 동작하므로, 안 되는 기기에서도 에러는 나지 않습니다)
+    // 이전(1280x720)보다 더 높게 요청하고, 지원하는 기기에서는 자동 초점이 계속
+    // 맞춰지도록 focusMode도 함께 요청합니다. 다만 "ideal"은 강제가 아니라
+    // 희망사항이라 기기가 이 해상도를 지원하지 않으면 브라우저가 알아서 가능한
+    // 값으로 낮춰서 동작하므로, 저사양 기기에서도 에러 없이 그대로 동작합니다.
+    // (실제로 어떤 해상도가 적용됐는지는 카메라 시작 후 logActualCameraSettings()에서
+    // 콘솔에 로그로 남깁니다)
     videoConstraints: {
       facingMode: "environment",
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
       focusMode: "continuous",
     },
   };
@@ -120,6 +123,8 @@ function openScanner() {
       scannerStatus.textContent = "바코드를 카메라에 비춰주세요";
       hasLoggedScanAttempt = false; // 이번 스캔 세션에서 "인식 시도 중" 로그를 다시 한 번 남길 수 있게 초기화
       applyContinuousFocus();
+      logActualCameraSettings();
+      applyZoomIfSupported();
     })
     .catch((error) => {
       // 카메라 권한을 거부했거나, PC처럼 카메라가 없는 환경인 경우입니다.
@@ -152,6 +157,52 @@ function applyContinuousFocus() {
       });
   } catch (error) {
     console.warn("[barcode] 연속 자동초점 적용 시도 자체가 실패(무시하고 진행):", error);
+  }
+}
+
+// 카메라가 실제로 어떤 해상도로 스트림을 보내주고 있는지 콘솔에 로그로 남깁니다.
+// videoConstraints의 width/height는 "ideal"(희망사항)이라 기기가 그 값을 그대로
+// 안 줄 수도 있어서, getRunningTrackSettings()로 브라우저가 실제로 적용한 값을
+// 확인해야 확실합니다. (개발자도구/eruda 콘솔에서 이 로그로 실제 해상도를 볼 수 있습니다)
+function logActualCameraSettings() {
+  try {
+    const settings = html5QrCode.getRunningTrackSettings();
+    console.log(
+      `[barcode] 실제 적용된 카메라 해상도: ${settings.width}x${settings.height} (요청한 값: 1920x1080)`
+    );
+  } catch (error) {
+    console.warn("[barcode] 실제 카메라 해상도를 확인하지 못했어요:", error);
+  }
+}
+
+// 기기가 카메라 확대(zoom)를 지원하면 살짝 확대해서 바코드가 화면에 더 크게(=더
+// 선명하게 보이는 효과) 잡히도록 합니다. 지원하지 않는 기기(대부분의 구형 기기,
+// 일부 iOS 브라우저)에서는 isSupported()가 false를 반환해서 아무 것도 하지 않고
+// 조용히 넘어가며, 확인 과정 자체가 실패하는 경우까지 대비해 try/catch로 감쌉니다.
+function applyZoomIfSupported() {
+  try {
+    const zoomCapability = html5QrCode.getRunningTrackCameraCapabilities().zoomFeature();
+    if (!zoomCapability.isSupported()) {
+      console.log("[barcode] 이 기기/브라우저는 카메라 확대(zoom)를 지원하지 않아요.");
+      return;
+    }
+
+    const min = zoomCapability.min();
+    const max = zoomCapability.max();
+    // 범위의 25% 지점 정도로만 살짝 확대합니다. 너무 확대하면 오히려 흔들림에
+    // 민감해지고 초점 맞추기가 더 어려워질 수 있어서 과하지 않게 잡았습니다.
+    const target = Math.min(max, Math.max(min, min + (max - min) * 0.25));
+
+    zoomCapability
+      .apply(target)
+      .then(() => {
+        console.log(`[barcode] 카메라 확대(zoom) 적용됨: ${target} (지원 범위 ${min}~${max})`);
+      })
+      .catch((error) => {
+        console.warn("[barcode] 카메라 확대(zoom) 적용 실패(무시하고 진행):", error);
+      });
+  } catch (error) {
+    console.warn("[barcode] 카메라 확대(zoom) 지원 여부 확인 실패(무시하고 진행):", error);
   }
 }
 

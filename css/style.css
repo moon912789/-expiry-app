@@ -312,7 +312,14 @@ main {
 #barcode-reader canvas {
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover !important; /* 검은 여백 없이 컨테이너를 꽉 채우도록 함 */
+  /* object-fit: cover는 원본 영상의 가로세로 비율을 그대로 유지한 채(찌그러뜨리지
+     않고) 컨테이너를 꽉 채웁니다. 만약 이 속성 없이 width/height만 강제하면
+     브라우저 기본값(fill)이 적용되어 영상이 옆으로 눌리거나 늘어나 찌그러져 보일
+     수 있는데, cover는 그런 왜곡 없이 비율을 지키면서 넘치는 부분만 잘라냅니다.
+     (화면이 흐릿하게 보이는 문제는 이 CSS 설정과는 무관하고, 카메라가 실제로
+     보내주는 해상도 자체가 낮아서 생기는 문제라 barcode.js의 videoConstraints
+     해상도 요청 값을 높이는 쪽으로 해결합니다) */
+  object-fit: cover !important;
 }
 
 .scanner-status {
@@ -320,6 +327,13 @@ main {
   text-align: center;
   font-size: 14px;
   color: #555;
+}
+
+.scanner-tip {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: #888;
 }
 
 .quick-buttons {
