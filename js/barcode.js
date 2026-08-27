@@ -38,9 +38,11 @@ let hasLoggedScanAttempt = false; // "인식 시도 중" 로그를 스캔 세션
 
 // ---- 연속 인식 검증(오인식 방지) ----
 // 화면이 흔들리거나 다른 텍스트/패턴이 순간적으로 바코드처럼 잘못 인식될 수 있어서,
-// "같은 값이 3번 연속으로 인식됐을 때"만 진짜 결과로 확정합니다. 값이 중간에
-// 바뀌면(예: 처음 두 번은 A, 세 번째는 B) 카운트를 1부터 다시 셉니다.
-const REQUIRED_CONSECUTIVE_MATCHES = 3;
+// "같은 값이 2번 연속으로 인식됐을 때"만 진짜 결과로 확정합니다. 값이 중간에
+// 바뀌면(예: 처음 값은 A, 두 번째는 B) 카운트를 1부터 다시 셉니다.
+// (원래 3번이었는데, 정확도는 크게 떨어뜨리지 않으면서 스캔 속도를 조금 더 빠르게
+//  하기 위해 2번으로 완화했습니다)
+const REQUIRED_CONSECUTIVE_MATCHES = 2;
 let lastDecodedValue = null;
 let consecutiveMatchCount = 0;
 
@@ -73,12 +75,14 @@ function openScanner() {
     // 인식 영역을 고정 크기(250x250)로 두면 카메라 화면보다 커서 인식이 안 되는
     // 경우가 있어서, 실제 카메라 화면 크기에 비례해서 계산하도록 했습니다.
     // 일반 바코드(EAN/UPC 등)는 가로로 긴 모양이라 세로 폭을 좁혀서 직사각형으로
-    // 잡되, 실제 바코드 크기보다 영역이 너무 크면 주변의 다른 텍스트/패턴까지
-    // 같이 잡혀서 엉뚱한 값이 인식될 수 있어 영역을 이전보다 더 좁혔습니다.
+    // 잡습니다. 너비 비율 0.7/최대 280px는 실제로는 바코드가 영역 안에 잘 안
+    // 들어와서 계속 실패하는 경우가 있었던 것으로 확인되어, 주변 텍스트가 같이
+    // 잡히는 것을 어느 정도 막으면서도 바코드가 충분히 들어올 수 있도록 다시
+    // 넓혔습니다(0.85배, 최대 300px).
     qrbox: (viewfinderWidth, viewfinderHeight) => {
       const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-      const boxWidth = Math.min(Math.floor(minEdge * 0.7), 280);
-      const boxHeight = Math.floor(boxWidth * 0.35);
+      const boxWidth = Math.min(Math.floor(minEdge * 0.85), 300);
+      const boxHeight = Math.floor(boxWidth * 0.4);
       return { width: boxWidth, height: boxHeight };
     },
     // 인식할 형식을 명시적으로 지정합니다. 지정하지 않으면 라이브러리가 지원하는
@@ -115,6 +119,7 @@ function openScanner() {
       isScanning = true;
       scannerStatus.textContent = "바코드를 카메라에 비춰주세요";
       hasLoggedScanAttempt = false; // 이번 스캔 세션에서 "인식 시도 중" 로그를 다시 한 번 남길 수 있게 초기화
+      applyContinuousFocus();
     })
     .catch((error) => {
       // 카메라 권한을 거부했거나, PC처럼 카메라가 없는 환경인 경우입니다.
@@ -124,6 +129,30 @@ function openScanner() {
       closeScanner();
       barcodeMessage.textContent = "카메라를 사용할 수 없어요. 직접 입력해주세요.";
     });
+}
+
+// 카메라가 켜진 뒤(start() 성공 이후), 이미 실행 중인 영상 트랙에 "연속 자동초점"을
+// 한 번 더 명시적으로 요청합니다. config.videoConstraints.focusMode로도 이미 요청은
+// 했지만, 일부 기기/브라우저는 카메라를 처음 열 때 넘긴 constraints의 focusMode는
+// 무시하면서도 실행 중에 applyConstraints()로 다시 요청하면 받아들이는 경우가 있어
+// 이중으로 시도합니다. advanced 배열 안에 넣으면, 그 항목을 지원하지 않는 기기는
+// (에러 없이) 그냥 무시하고 넘어가므로 더 안전합니다. 그래도 혹시 이 메서드 자체가
+// 없거나 Promise가 reject되는 경우까지 대비해 try/catch로 감쌉니다.
+function applyContinuousFocus() {
+  try {
+    html5QrCode
+      .applyVideoConstraints({ advanced: [{ focusMode: "continuous" }] })
+      .then(() => {
+        console.log("[barcode] 연속 자동초점(advanced constraint) 적용 시도 완료");
+      })
+      .catch((error) => {
+        // 기기가 이 옵션을 지원하지 않는 경우입니다. 스캔 자체에는 지장이 없으므로
+        // 조용히 로그만 남기고 넘어갑니다.
+        console.warn("[barcode] 연속 자동초점 적용 실패(이 기기는 지원 안 할 수 있음):", error);
+      });
+  } catch (error) {
+    console.warn("[barcode] 연속 자동초점 적용 시도 자체가 실패(무시하고 진행):", error);
+  }
 }
 
 // 카메라를 끄고 스캐너 화면을 닫습니다. (✕ 버튼을 눌렀을 때 사용)
@@ -161,8 +190,8 @@ function onScanFailure() {
 
 // 바코드/QR코드가 "한 프레임에서" 인식됐을 때 호출됩니다. decodedText가 인식된 번호(문자열)입니다.
 // 흔들림이나 주변 텍스트 때문에 순간적으로 엉뚱한 값이 인식될 수 있어서, 여기서는
-// 바로 확정하지 않고 같은 값이 REQUIRED_CONSECUTIVE_MATCHES(3)번 연속으로 나와야만
-// 진짜 결과로 받아들입니다. (confirmScannedBarcode에서 최종 확정 처리를 합니다)
+// 바로 확정하지 않고 같은 값이 REQUIRED_CONSECUTIVE_MATCHES(2)번 연속으로 나와야만
+// 진짜 결과로 받아들입니다.
 function onScanSuccess(decodedText) {
   if (decodedText === lastDecodedValue) {
     consecutiveMatchCount += 1;

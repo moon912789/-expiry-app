@@ -291,11 +291,28 @@ main {
   cursor: pointer;
 }
 
-/* html5-qrcode 라이브러리가 이 안에 카메라 영상을 그려 넣음 */
+/*
+  html5-qrcode 라이브러리가 이 안에 <video>(카메라 영상)와 인식 영역을 표시하는
+  <canvas>를 그려 넣습니다. 라이브러리는 보통 이 요소들의 너비만 지정하고 높이는
+  비워두는데(브라우저가 영상 원본 비율대로 자동 계산), 실제 기기의 카메라가 요청한
+  해상도(1280x720, 16:9)와 다른 비율을 주는 경우 등에 따라 아래쪽에 불필요한
+  검은 여백이 남는 경우가 있었습니다. 그래서 컨테이너 자체를 16:9 비율로 고정하고,
+  안의 video/canvas는 그 비율에 맞춰 여백 없이 꽉 채우도록(object-fit: cover)
+  강제합니다. (고정된 큰 px 값 대신 aspect-ratio를 써서, 너비에 비례해 높이가
+  자동으로 정해지므로 화면 크기가 달라져도 항상 같은 비율을 유지합니다)
+*/
 #barcode-reader {
   width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: hidden; /* object-fit: cover로 영상이 컨테이너보다 커질 때 밖으로 삐져나가지 않게 함 */
+}
+
+#barcode-reader video,
+#barcode-reader canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important; /* 검은 여백 없이 컨테이너를 꽉 채우도록 함 */
 }
 
 .scanner-status {
