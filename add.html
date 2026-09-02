@@ -33,27 +33,6 @@
   </script>
   <!-- ===== [테스트용, 나중에 제거] eruda 모바일 디버깅 도구 끝 ===== -->
 
-  <!-- ===== [테스트용, 나중에 제거] 화면 높이 디버그 표시 시작 =====
-       화면 아래쪽 빈 공간 문제를 정확히 맞추려면 이 폰의 실제 화면 높이(px) 값이
-       필요해서, 화면 맨 위에 항상 보이는 작은 숫자로 표시해둡니다.
-       확인 후 이 블록만 지우면 됩니다. -->
-  <div id="debug-viewport-size" style="position: fixed; top: 0; left: 0; right: 0; z-index: 999; background: #ffeb3b; color: #000; font-size: 12px; padding: 4px 8px; text-align: center;"></div>
-  <script>
-    function updateViewportDebug() {
-      var el = document.getElementById("debug-viewport-size");
-      var vv = window.visualViewport;
-      el.textContent =
-        "innerHeight: " + window.innerHeight +
-        "px / visualViewport: " + (vv ? Math.round(vv.height) : "N/A") + "px";
-    }
-    updateViewportDebug();
-    window.addEventListener("resize", updateViewportDebug);
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", updateViewportDebug);
-    }
-  </script>
-  <!-- ===== [테스트용, 나중에 제거] 화면 높이 디버그 표시 끝 ===== -->
-
   <!--
     항목 추가/수정 화면
     - 주소 뒤에 ?id=아이디 가 붙어 있으면 "수정 모드"로 동작합니다.

@@ -598,7 +598,7 @@ main {
   (min-height 미디어 쿼리라서 화면 "가로" 크기가 아니라 "세로" 여유를 기준으로
   전환됩니다)
 */
-@media (min-height: 700px) {
+@media (min-height: 680px) {
   main {
     padding: 11px 16px;
   }
@@ -622,12 +622,12 @@ main {
   .item-form textarea {
     padding: 7px 9px;
     font-size: 14px;
-    min-height: 86px;
+    min-height: 90px;
   }
 
   .category-options {
     gap: 6px;
-    margin-top: 4px;
+    margin-top: 3px;
   }
 
   .category-option span {
@@ -658,7 +658,7 @@ main {
   .save-btn,
   .delete-btn {
     margin-top: 6px;
-    padding: 8px 0;
+    padding: 9px 0;
     font-size: 14px;
   }
 }
