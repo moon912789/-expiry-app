@@ -133,7 +133,25 @@ document.querySelectorAll(".category-tab").forEach((tab) => {
   다시 확인합니다. 그래서 새로고침만으로는 앱을 수정해도 예전 캐시가 계속 보일 수 있습니다.
   registration.update()를 직접 호출하면 이 24시간 제한과 상관없이 즉시 새 버전이 있는지
   확인하기 때문에, 페이지를 열 때마다 호출해서 항상 최신 버전을 받도록 합니다.
+
+  그런데 여기서 끝이 아닙니다: update()가 새 버전을 찾아서 설치를 시작해도, 그 설치가
+  끝나서 "새 서비스 워커가 실제로 화면을 넘겨받는 시점"은 페이지가 이미 로드된 뒤,
+  백그라운드에서 비동기로 일어납니다. 그래서 사용자가 새로고침을 여러 번 반복해도
+  타이밍에 따라 계속 예전 화면만 보이는 경우가 있었습니다.
+  아래 controllerchange 이벤트는 "새 서비스 워커가 화면을 넘겨받은 바로 그 순간"에
+  발생하므로, 그 시점에 페이지를 자동으로 한 번 새로고침해서 최신 화면이 확실히
+  보이도록 합니다. (처음 서비스 워커를 설치하는 아주 첫 방문에서도 한 번 발생할 수
+  있는데, 그때는 내용이 어차피 최신이라 화면이 살짝 깜빡이는 정도로 무해합니다)
 */
+let hasReloadedForNewServiceWorker = false;
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (hasReloadedForNewServiceWorker) return;
+    hasReloadedForNewServiceWorker = true;
+    window.location.reload();
+  });
+}
+
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return Promise.resolve(null);
 
