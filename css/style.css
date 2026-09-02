@@ -148,31 +148,33 @@ main {
 .item-form {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .item-form label {
   font-size: 12px;
   color: #555;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .item-form input[type="text"],
 .item-form input[type="date"],
 .item-form input[type="number"] {
-  padding: 7px 8px;
+  padding: 6px 8px;
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 6px;
 }
 
+/* 메모는 여러 줄을 편하게 쓸 수 있도록 3~4줄(약 80px) 높이를 확보합니다.
+   그만큼 늘어난 공간은 위의 gap/label 여백과 아래 버튼류 여백을 줄여서 맞췄습니다. */
 .item-form textarea {
   padding: 6px 8px;
   font-size: 14px;
   font-family: inherit;
   border: 1px solid #ccc;
   border-radius: 6px;
-  min-height: 32px;
+  min-height: 80px;
   resize: vertical;
 }
 
@@ -180,8 +182,8 @@ main {
 .category-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 6px;
+  margin-top: 3px;
 }
 
 .category-option {
@@ -219,8 +221,8 @@ main {
 
 /* 추가/수정 화면: 바코드 스캔 버튼 + 안내 문구 */
 .barcode-btn {
-  margin-top: 4px;
-  padding: 7px 0;
+  margin-top: 0;
+  padding: 6px 0;
   border: 1px solid #4caf50;
   background-color: #fff;
   color: #4caf50;
@@ -234,10 +236,10 @@ main {
 }
 
 .barcode-message {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   font-size: 11px;
   color: #777;
-  min-height: 13px; /* 문구가 없을 때도 레이아웃이 안 흔들리도록 자리를 미리 잡아둠 */
+  min-height: 12px; /* 문구가 없을 때도 레이아웃이 안 흔들리도록 자리를 미리 잡아둠 */
 }
 
 /* 바코드 스캔으로 유통기한이 자동 입력됐을 때, 그 값을 그대로 믿지 말라는 주의 문구 */
@@ -345,12 +347,12 @@ main {
 .quick-buttons {
   display: flex;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .quick-btn {
   flex: 1;
-  padding: 6px 0;
+  padding: 5px 0;
   font-size: 12px;
   border: 1px solid #4caf50;
   background-color: #fff;
@@ -370,7 +372,7 @@ main {
 .alert-days-row {
   display: flex;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .alert-days-buttons {
@@ -390,8 +392,8 @@ main {
 
 .save-btn,
 .delete-btn {
-  margin-top: 6px;
-  padding: 9px 0;
+  margin-top: 5px;
+  padding: 8px 0;
   font-size: 14px;
   border: none;
   border-radius: 6px;
