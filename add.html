@@ -94,7 +94,18 @@
       </div>
 
       <label for="alertDays">며칠 전부터 알림을 받을까요?</label>
-      <input type="number" id="alertDays" min="1" max="30" step="1" value="3" required>
+      <!-- 유통기한처럼 버튼으로 빠르게 고르되, 버튼에 없는 값(예: 5일)은
+           옆의 입력칸에 직접 입력할 수 있습니다. 최종적으로 저장되는 값은
+           항상 이 입력칸(#alertDays)의 값이고, 버튼은 이 칸을 채워주는 역할만 합니다. -->
+      <div class="alert-days-row">
+        <div class="quick-buttons alert-days-buttons">
+          <button type="button" class="quick-btn alert-day-btn" data-days="3">3일</button>
+          <button type="button" class="quick-btn alert-day-btn" data-days="7">7일</button>
+          <button type="button" class="quick-btn alert-day-btn" data-days="14">14일</button>
+          <button type="button" class="quick-btn alert-day-btn" data-days="30">30일</button>
+        </div>
+        <input type="number" id="alertDays" class="alert-days-input" min="1" max="30" step="1" value="3" required>
+      </div>
 
       <label for="memo">메모 (선택)</label>
       <textarea id="memo" placeholder="예: 냉장고 안쪽 칸, 개봉 후 3일 이내 사용"></textarea>

@@ -20,7 +20,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 10px 16px;
   background-color: #ffffff;
   border-bottom: 1px solid #e0e0e0;
   position: sticky;
@@ -62,7 +62,7 @@ body {
 main {
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 10px 16px;
 }
 
 /* 항목 목록 */
@@ -138,35 +138,41 @@ main {
   background-color: #ffebee;
 }
 
-/* 추가/수정 폼 */
+/*
+  추가/수정 폼
+  화면 높이가 640~800px인 모바일에서도 스크롤 없이 폼 전체(바코드 버튼부터
+  저장 버튼까지)가 한 화면에 들어오도록, 항목 사이 여백과 글자 크기를
+  전반적으로 줄였습니다. 다만 입력칸/버튼의 실제 터치 영역(패딩 포함 높이)은
+  최소 32px 이상을 유지해서 손가락으로 누르기 불편해지지 않게 했습니다.
+*/
 .item-form {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .item-form label {
-  font-size: 14px;
+  font-size: 12px;
   color: #555;
-  margin-top: 12px;
+  margin-top: 4px;
 }
 
 .item-form input[type="text"],
 .item-form input[type="date"],
 .item-form input[type="number"] {
-  padding: 10px;
-  font-size: 16px;
+  padding: 7px 8px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 6px;
 }
 
 .item-form textarea {
-  padding: 10px;
-  font-size: 16px;
+  padding: 6px 8px;
+  font-size: 14px;
   font-family: inherit;
   border: 1px solid #ccc;
   border-radius: 6px;
-  min-height: 80px;
+  min-height: 32px;
   resize: vertical;
 }
 
@@ -191,10 +197,10 @@ main {
 
 .category-option span {
   display: inline-block;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border: 1px solid #ccc;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
   user-select: none;
 }
@@ -213,13 +219,13 @@ main {
 
 /* 추가/수정 화면: 바코드 스캔 버튼 + 안내 문구 */
 .barcode-btn {
-  margin-top: 8px;
-  padding: 10px 0;
+  margin-top: 4px;
+  padding: 7px 0;
   border: 1px solid #4caf50;
   background-color: #fff;
   color: #4caf50;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
 }
 
@@ -228,10 +234,10 @@ main {
 }
 
 .barcode-message {
-  margin: 6px 0 0;
-  font-size: 13px;
+  margin: 3px 0 0;
+  font-size: 11px;
   color: #777;
-  min-height: 16px; /* 문구가 없을 때도 레이아웃이 안 흔들리도록 자리를 미리 잡아둠 */
+  min-height: 13px; /* 문구가 없을 때도 레이아웃이 안 흔들리도록 자리를 미리 잡아둠 */
 }
 
 /* 바코드 스캔으로 유통기한이 자동 입력됐을 때, 그 값을 그대로 믿지 말라는 주의 문구 */
@@ -338,18 +344,44 @@ main {
 
 .quick-buttons {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .quick-btn {
   flex: 1;
-  padding: 8px 0;
+  padding: 6px 0;
+  font-size: 12px;
   border: 1px solid #4caf50;
   background-color: #fff;
   color: #4caf50;
   border-radius: 6px;
   cursor: pointer;
+}
+
+/* 버튼으로 값을 골랐을 때(알림일수) 선택된 상태를 표시 */
+.quick-btn.active {
+  background-color: #4caf50;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* 알림일수: 버튼들 + 직접 입력칸을 한 줄에 나란히 배치해서 세로 공간을 아낍니다 */
+.alert-days-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.alert-days-buttons {
+  flex: 1;
+  margin-top: 0; /* .quick-buttons의 기본 margin-top은 이 줄 안에서는 필요 없음 */
+}
+
+.alert-days-input {
+  width: 64px;
+  flex: none;
+  text-align: center;
 }
 
 .quick-btn:hover {
@@ -358,9 +390,9 @@ main {
 
 .save-btn,
 .delete-btn {
-  margin-top: 20px;
-  padding: 12px 0;
-  font-size: 16px;
+  margin-top: 6px;
+  padding: 9px 0;
+  font-size: 14px;
   border: none;
   border-radius: 6px;
   cursor: pointer;

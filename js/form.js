@@ -48,13 +48,39 @@ if (editId) {
 // editId가 없으면 그냥 "항목 추가" 상태(HTML 기본값) 그대로 둡니다.
 
 // +3일/+7일/+14일/+30일 버튼: 구매일 기준으로 유통기한을 자동 계산해서 채워줍니다.
-document.querySelectorAll(".quick-btn").forEach((btn) => {
+document.querySelectorAll(".quick-btn:not(.alert-day-btn)").forEach((btn) => {
   btn.addEventListener("click", () => {
     const days = Number(btn.dataset.days); // data-days="7" -> 7
     const baseDate = purchaseDateInput.value || getTodayString();
     expiryDateInput.value = addDays(baseDate, days);
   });
 });
+
+/*
+  알림일수 버튼(3일/7일/14일/30일)과 숫자 입력칸(#alertDays)을 서로 맞춰줍니다.
+  - 버튼을 누르면 그 값을 입력칸에 채우고, 그 버튼을 "선택된 상태"로 표시합니다.
+  - 입력칸에 직접 값을 입력하면(버튼에 없는 값 포함), 그 값과 같은 버튼이 있으면
+    그 버튼만 선택된 상태로 표시하고, 없으면(예: 5일) 어떤 버튼도 선택 표시하지 않습니다.
+  최종적으로 저장될 때는 항상 #alertDays의 값을 사용하므로, 버튼은 이 칸을 빠르게
+  채워주는 역할만 합니다.
+*/
+const alertDayButtons = document.querySelectorAll(".alert-day-btn");
+
+function syncAlertDayButtons() {
+  alertDayButtons.forEach((btn) => {
+    btn.classList.toggle("active", Number(btn.dataset.days) === Number(alertDaysInput.value));
+  });
+}
+
+alertDayButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    alertDaysInput.value = btn.dataset.days;
+    syncAlertDayButtons();
+  });
+});
+
+alertDaysInput.addEventListener("input", syncAlertDayButtons);
+syncAlertDayButtons(); // 페이지를 열었을 때(기본값 3일, 또는 수정 모드로 불러온 값) 바로 반영
 
 // 폼 제출(저장 버튼 클릭) 처리
 // 카테고리(required 라디오)와 알림일수(required, min/max 숫자)는
