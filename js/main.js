@@ -140,12 +140,21 @@ document.querySelectorAll(".category-tab").forEach((tab) => {
   타이밍에 따라 계속 예전 화면만 보이는 경우가 있었습니다.
   아래 controllerchange 이벤트는 "새 서비스 워커가 화면을 넘겨받은 바로 그 순간"에
   발생하므로, 그 시점에 페이지를 자동으로 한 번 새로고침해서 최신 화면이 확실히
-  보이도록 합니다. (처음 서비스 워커를 설치하는 아주 첫 방문에서도 한 번 발생할 수
-  있는데, 그때는 내용이 어차피 최신이라 화면이 살짝 깜빡이는 정도로 무해합니다)
+  보이도록 합니다.
+
+  중요(이전 버전의 버그): 서비스 워커를 "맨 처음 설치"할 때도 이 이벤트가 한 번
+  발생합니다. 예전 코드는 이 경우까지 구분 없이 새로고침을 해버려서, 사용자가
+  폼에 한창 입력하고 있는 도중에도 화면이 갑자기 리셋되는 문제가 있었습니다.
+  그래서 "이 페이지를 열었을 때 이미 다른 곳에서 서비스 워커가 활성화되어 있었는지"를
+  먼저 기록해두고, 그게 true일 때(=새 버전으로 "교체"된 경우)만 새로고침하고,
+  false일 때(=지금이 첫 설치인 경우, 지금 로드된 페이지가 이미 최신 내용)는
+  새로고침하지 않습니다.
 */
-let hasReloadedForNewServiceWorker = false;
 if ("serviceWorker" in navigator) {
+  const hadControllerBeforeRegister = !!navigator.serviceWorker.controller;
+  let hasReloadedForNewServiceWorker = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadControllerBeforeRegister) return; // 첫 설치라서 새로고침이 필요 없는 경우
     if (hasReloadedForNewServiceWorker) return;
     hasReloadedForNewServiceWorker = true;
     window.location.reload();
