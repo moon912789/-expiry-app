@@ -59,6 +59,13 @@
       <!-- 조회 성공/실패 안내 문구가 뜨는 자리 (팝업 대신 여기에 조용히 표시) -->
       <p id="barcode-message" class="barcode-message"></p>
 
+      <!-- 바코드 스캔(Open Food Facts)으로 알레르기 정보를 찾았을 때만 barcode.js가
+           이 안에 내용을 채우고 보여줍니다. 수동 입력 항목이나 알레르기 정보가 없는
+           제품은 계속 hidden 상태로 남아 화면에 아무것도 안 보입니다.
+           #allergyInfo는 화면에 안 보이는 채로 실제 저장될 값만 들고 있습니다. -->
+      <input type="hidden" id="allergyInfo" value="">
+      <p id="allergy-info-display" class="allergy-info-display" hidden></p>
+
       <label for="name">품목명</label>
       <input type="text" id="name" placeholder="예: 우유, 계란, 스킨로션" required>
 

@@ -253,6 +253,13 @@ main {
   margin: 0;
 }
 
+/* 바코드 스캔(Open Food Facts)으로 알레르기 정보를 찾았을 때만 보이는 문구 */
+.allergy-info-display {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #c62828;
+}
+
 /* 바코드 스캔 화면 전체를 덮는 오버레이 */
 .scanner-overlay {
   position: fixed;
@@ -474,6 +481,24 @@ main {
 /* 목록 카드: 메모가 있는 항목 옆에 붙는 작은 표시 */
 .memo-badge {
   font-size: 13px;
+}
+
+/* 목록 카드: 알레르기 정보가 있는 항목 옆에 붙는 경고 아이콘 */
+.allergy-badge {
+  font-size: 13px;
+}
+
+/* 목록 카드 하단의 "레시피 찾기" 링크 (item-link와는 별개의 링크라 padding을 따로 둡니다) */
+.recipe-link {
+  display: block;
+  padding: 0 16px 12px;
+  font-size: 12px;
+  color: #4caf50;
+  text-decoration: none;
+}
+
+.recipe-link:hover {
+  text-decoration: underline;
 }
 
 /* 캘린더 화면 (calendar.html) */

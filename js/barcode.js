@@ -29,6 +29,82 @@ const scannerCloseBtn = document.getElementById("scanner-close-btn");
 const scannerStatus = document.getElementById("scanner-status");
 const barcodeMessage = document.getElementById("barcode-message");
 const expiryAutoNotice = document.getElementById("expiry-auto-notice");
+// allergyInfoInput, allergyInfoDisplay는 js/form.js에서 이미 선언해 둔 전역 변수를
+// 그대로 재사용합니다(nameInput, expiryDateInput 등과 같은 방식). add.html에서
+// form.js를 barcode.js보다 먼저 불러오기 때문에 이 시점엔 이미 선언되어 있습니다.
+
+/*
+  Open Food Facts는 알레르기 성분을 "en:milk", "en:eggs"처럼 영어 태그로 줍니다.
+  한국 식품표시 기준상 주요 알레르기 유발 성분(22종) 위주로 자연스러운 한국어
+  이름을 매핑해둡니다. 매핑에 없는 태그가 오면(흔치 않은 성분) 원문을 최대한
+  읽기 쉬운 형태로만 다듬어서(en: 접두어 제거, 하이픈을 공백으로) 보여줍니다.
+*/
+const ALLERGEN_KO_MAP = {
+  milk: "우유",
+  eggs: "계란",
+  peanuts: "땅콩",
+  soybeans: "대두",
+  wheat: "밀",
+  buckwheat: "메밀",
+  gluten: "글루텐(밀 등 곡류)",
+  nuts: "견과류",
+  "tree-nuts": "견과류",
+  "pine-nuts": "잣",
+  walnuts: "호두",
+  fish: "생선",
+  crustaceans: "갑각류",
+  shrimps: "새우",
+  crabs: "게",
+  molluscs: "연체동물(조개류)",
+  squid: "오징어",
+  celery: "셀러리",
+  mustard: "겨자",
+  "sesame-seeds": "참깨",
+  "sulphur-dioxide-and-sulphites": "아황산류",
+  lupin: "루핀",
+  pork: "돼지고기",
+  beef: "소고기",
+  chicken: "닭고기",
+  tomatoes: "토마토",
+  peaches: "복숭아",
+};
+
+// "en:milk" -> "milk" -> "우유" 처럼 태그 하나를 한국어로 바꿉니다.
+// 매핑에 없으면 접두어만 떼고 하이픈을 공백으로 바꿔서 최대한 읽기 쉽게 돌려줍니다.
+function translateAllergenTag(tag) {
+  const key = tag.replace(/^en:/i, "").trim().toLowerCase();
+  if (!key) return null;
+  return ALLERGEN_KO_MAP[key] || key.replace(/-/g, " ");
+}
+
+// Open Food Facts 응답에서 온 알레르기 태그들(배열 또는 콤마로 구분된 문자열)을
+// 한국어 이름들을 콤마로 이어붙인 문자열로 바꿉니다. (예: "우유, 계란")
+// 태그가 없거나 전부 빈 값이면 빈 문자열을 돌려줍니다.
+function translateAllergens(tagsOrString) {
+  const tags = Array.isArray(tagsOrString) ? tagsOrString : String(tagsOrString || "").split(",");
+
+  const names = tags
+    .map((tag) => (tag ? translateAllergenTag(tag) : null))
+    .filter(Boolean)
+    .filter((name, index, all) => all.indexOf(name) === index); // 중복 제거
+
+  return names.join(", ");
+}
+
+// 알레르기 정보 표시 영역을 비웁니다. (새 스캔을 시작할 때, 이전 스캔의 정보가
+// 남아있지 않도록 초기화하는 용도로 씁니다)
+function clearAllergyInfoDisplay() {
+  allergyInfoInput.value = "";
+  allergyInfoDisplay.textContent = "";
+  allergyInfoDisplay.hidden = true;
+}
+
+// 알레르기 정보를 화면에 보여주고, 저장용 hidden input에도 값을 채웁니다.
+function showAllergyInfo(allergyInfoText) {
+  allergyInfoInput.value = allergyInfoText;
+  allergyInfoDisplay.textContent = `⚠️ 알레르기 정보: ${allergyInfoText}`;
+  allergyInfoDisplay.hidden = false;
+}
 
 // CDN 스크립트가 어떤 이유로든 로드되지 않았을 수 있어서, 있는지부터 확인합니다.
 const html5QrCode = "Html5Qrcode" in window ? new Html5Qrcode("barcode-reader") : null;
@@ -381,7 +457,19 @@ async function lookupOpenFoodFacts(barcode) {
   const productName = data.product && (data.product.product_name_ko || data.product.product_name);
   if (data.status !== 1 || !productName) return null;
 
-  return { name: productName };
+  // 알레르기 정보: allergens_tags(배열, 예: ["en:milk","en:eggs"])가 더 정형화된
+  // 형식이라 우선 사용하고, 없으면 allergens(콤마로 구분된 문자열)를 대신 씁니다.
+  // 둘 다 없거나 조회에 실패해도 이 함수 자체가 실패하지 않고 그냥 빈 문자열을 돌려줍니다.
+  const allergensTags = data.product && data.product.allergens_tags;
+  const allergensRaw = data.product && data.product.allergens;
+  let allergyInfo = "";
+  if (Array.isArray(allergensTags) && allergensTags.length > 0) {
+    allergyInfo = translateAllergens(allergensTags);
+  } else if (allergensRaw) {
+    allergyInfo = translateAllergens(allergensRaw);
+  }
+
+  return { name: productName, allergyInfo };
 }
 
 // 바코드로 제품 정보를 조회합니다. 1순위(푸드QR) -> 2순위(Open Food Facts) 순서로 시도하고,
@@ -389,6 +477,7 @@ async function lookupOpenFoodFacts(barcode) {
 async function lookupProduct(barcode) {
   barcodeMessage.textContent = "제품 정보를 찾는 중...";
   expiryAutoNotice.textContent = ""; // 이전 스캔에서 남은 주의 문구를 지웁니다.
+  clearAllergyInfoDisplay(); // 이전 스캔에서 남은 알레르기 정보도 지웁니다.
 
   try {
     const foodQrResult = await lookupFoodQr(barcode);
@@ -419,6 +508,9 @@ async function lookupProduct(barcode) {
     if (offResult) {
       nameInput.value = offResult.name;
       barcodeMessage.textContent = "제품 정보를 불러왔어요. 필요하면 이름을 수정해도 돼요.";
+      if (offResult.allergyInfo) {
+        showAllergyInfo(offResult.allergyInfo);
+      }
       return;
     }
   } catch (error) {

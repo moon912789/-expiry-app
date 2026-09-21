@@ -11,7 +11,9 @@
     purchaseDate: "2026-08-19", // 구매일 (YYYY-MM-DD)
     expiryDate: "2026-08-26",   // 유통기한 (YYYY-MM-DD)
     alertDays: 3,           // 유통기한 며칠 전부터 알림을 받을지
-    memo: "냉장고 안쪽 칸"    // 메모 (선택 입력)
+    memo: "냉장고 안쪽 칸",   // 메모 (선택 입력)
+    allergyInfo: "우유, 계란" // 알레르기 유발 성분 (바코드 스캔으로 Open Food Facts에서
+                              // 조회됐을 때만 채워짐. 수동 입력 항목은 빈 문자열)
   }
 */
 
@@ -31,14 +33,15 @@ const CATEGORY_ICONS = {
 const DEFAULT_CATEGORY = "상온";
 const DEFAULT_ALERT_DAYS = 3;
 
-// 예전 버전에서 저장된 항목(카테고리/알림일수/메모가 없음)도 문제없이 쓸 수 있도록
-// 빠진 값에 기본값을 채워서 돌려줍니다.
+// 예전 버전에서 저장된 항목(카테고리/알림일수/메모/알레르기 정보가 없음)도 문제없이
+// 쓸 수 있도록 빠진 값에 기본값을 채워서 돌려줍니다.
 function normalizeItem(item) {
   return {
     ...item,
     category: item.category || DEFAULT_CATEGORY,
     alertDays: item.alertDays || DEFAULT_ALERT_DAYS,
     memo: item.memo || "",
+    allergyInfo: item.allergyInfo || "",
   };
 }
 

@@ -12,6 +12,9 @@
 // 지금 선택된 카테고리 탭 ("all"이면 전체 보기)
 let currentCategoryFilter = "all";
 
+// 화장품이 아닌(음식) 카테고리 목록. 레시피 찾기 링크는 이 카테고리에서만 보여줍니다.
+const FOOD_CATEGORIES = ["상온", "냉장", "냉동"];
+
 // 항목 하나를 나타내는 <li> 카드를 만듭니다.
 // 목록(item-list)과 알림 섹션(alert-section) 양쪽에서 똑같은 모양으로 재사용합니다.
 function createItemCard(item) {
@@ -41,6 +44,17 @@ function createItemCard(item) {
     nameSpan.appendChild(memoBadge);
   }
 
+  // 알레르기 정보가 있는 항목(바코드 스캔으로 조회된 경우만)에는 경고 아이콘을 덧붙입니다.
+  // 마우스를 올리면(title) 전체 성분도 미리 볼 수 있고, 자세히 보려면 항목을 클릭해서
+  // 수정 화면으로 들어가면 됩니다.
+  if (item.allergyInfo) {
+    const allergyBadge = document.createElement("span");
+    allergyBadge.className = "allergy-badge";
+    allergyBadge.textContent = " ⚠️";
+    allergyBadge.title = `알레르기 정보: ${item.allergyInfo}`;
+    nameSpan.appendChild(allergyBadge);
+  }
+
   const ddaySpan = document.createElement("span");
   ddaySpan.className = "item-dday";
   ddaySpan.textContent = ddayText;
@@ -48,6 +62,20 @@ function createItemCard(item) {
   link.appendChild(nameSpan);
   link.appendChild(ddaySpan);
   li.appendChild(link);
+
+  // 레시피 찾기 링크는 item-link(수정 화면으로 이동하는 링크) 안이 아니라 밖에,
+  // <li>의 형제 요소로 따로 둡니다. <a> 안에 또 다른 <a>를 중첩할 수 없기 때문입니다.
+  // 화장품 카테고리는 레시피와 관계가 없으므로 음식 카테고리에서만 보여줍니다.
+  if (FOOD_CATEGORIES.includes(item.category)) {
+    const recipeLink = document.createElement("a");
+    recipeLink.className = "recipe-link";
+    recipeLink.href = `https://www.10000recipe.com/recipe/list.html?q=${encodeURIComponent(item.name)}`;
+    recipeLink.target = "_blank";
+    recipeLink.rel = "noopener noreferrer"; // 새 탭이 원래 페이지(window.opener)를 조작하지 못하도록 막는 보안 관례
+    recipeLink.textContent = "🍳 레시피 찾기";
+    li.appendChild(recipeLink);
+  }
+
   return li;
 }
 

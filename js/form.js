@@ -17,6 +17,8 @@ const purchaseDateInput = document.getElementById("purchaseDate");
 const expiryDateInput = document.getElementById("expiryDate");
 const alertDaysInput = document.getElementById("alertDays");
 const memoInput = document.getElementById("memo");
+const allergyInfoInput = document.getElementById("allergyInfo");
+const allergyInfoDisplay = document.getElementById("allergy-info-display");
 const deleteBtn = document.getElementById("delete-btn");
 const formTitle = document.getElementById("form-title");
 const form = document.getElementById("item-form");
@@ -35,6 +37,14 @@ if (editId) {
     expiryDateInput.value = item.expiryDate;
     alertDaysInput.value = item.alertDays;
     memoInput.value = item.memo;
+
+    // 알레르기 정보는 바코드 스캔으로만 채워지는 값이라 직접 입력하는 칸은 없고,
+    // 기존에 저장된 값이 있으면 그대로 화면에 보여주기만 합니다.
+    if (item.allergyInfo) {
+      allergyInfoInput.value = item.allergyInfo;
+      allergyInfoDisplay.textContent = `⚠️ 알레르기 정보: ${item.allergyInfo}`;
+      allergyInfoDisplay.hidden = false;
+    }
 
     // 카테고리 라디오 버튼 중 이 항목의 카테고리와 같은 것을 선택 상태로 만듭니다.
     const categoryRadio = document.querySelector(`input[name="category"][value="${item.category}"]`);
@@ -102,11 +112,12 @@ form.addEventListener("submit", (event) => {
   const category = categoryRadio.value;
   const alertDays = Number(alertDaysInput.value);
   const memo = memoInput.value.trim();
+  const allergyInfo = allergyInfoInput.value; // 바코드 스캔으로 채워진 값을 그대로 저장 (직접 입력 칸 없음)
 
   if (editId) {
-    updateItem({ id: editId, name, category, purchaseDate, expiryDate, alertDays, memo });
+    updateItem({ id: editId, name, category, purchaseDate, expiryDate, alertDays, memo, allergyInfo });
   } else {
-    addItem({ name, category, purchaseDate, expiryDate, alertDays, memo });
+    addItem({ name, category, purchaseDate, expiryDate, alertDays, memo, allergyInfo });
   }
 
   // 저장이 끝나면 목록 화면으로 돌아갑니다.
