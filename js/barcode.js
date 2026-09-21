@@ -3,7 +3,14 @@
   역할: add.html의 "바코드로 자동 입력" 버튼을 눌렀을 때
         1) 카메라를 켜서 바코드/QR코드를 인식하고
         2) 인식된 번호로 제품 정보를 찾아서(1순위: 식약처 푸드QR, 2순위: Open Food Facts)
-        3) 품목명(nameInput), 가능하면 유통기한(expiryDateInput)까지 자동으로 채워줍니다.
+        3) 품목명(nameInput), 가능하면 유통기한(expiryDateInput), 알레르기 정보까지
+           자동으로 채워줍니다.
+
+  이름/유통기한과 알레르기 정보는 서로 다른 API를 따로 조회합니다.
+  - 이름/유통기한: 1순위 lookupFoodQr(푸드QR 목록정보) -> 2순위 lookupOpenFoodFacts
+  - 알레르기 정보: 1순위 lookupFoodQrAllergy(푸드QR 알레르기정보) -> 2순위 lookupOpenFoodFacts(allergens)
+  그래서 이름을 1순위(푸드QR)로 이미 찾았더라도, 알레르기 정보가 1순위에 없으면
+  Open Food Facts를 알레르기 정보만을 위해 추가로 한 번 더 호출할 수 있습니다.
 
   이 파일은 세 가지를 그대로 재사용합니다.
   - CDN으로 불러온 html5-qrcode 라이브러리의 Html5Qrcode 클래스 (카메라/인식 담당)
@@ -34,7 +41,9 @@ const expiryAutoNotice = document.getElementById("expiry-auto-notice");
 // form.js를 barcode.js보다 먼저 불러오기 때문에 이 시점엔 이미 선언되어 있습니다.
 
 /*
-  Open Food Facts는 알레르기 성분을 "en:milk", "en:eggs"처럼 영어 태그로 줍니다.
+  아래 매핑 테이블은 2순위(Open Food Facts)에서만 씁니다. Open Food Facts는
+  알레르기 성분을 "en:milk", "en:eggs"처럼 영어 태그로 주기 때문입니다.
+  (1순위인 푸드QR 알레르기정보는 ALG_CSG_MTR_NM 값이 이미 한국어라 번역이 필요 없습니다)
   한국 식품표시 기준상 주요 알레르기 유발 성분(22종) 위주로 자연스러운 한국어
   이름을 매핑해둡니다. 매핑에 없는 태그가 오면(흔치 않은 성분) 원문을 최대한
   읽기 쉬운 형태로만 다듬어서(en: 접두어 제거, 하이픈을 공백으로) 보여줍니다.
@@ -348,17 +357,28 @@ function onScanSuccess(decodedText) {
   lookupProduct(decodedText);
 }
 
-// "20261231" 같은 8자리 숫자(YYYYMMDD)면 "2026-12-31"로 바꿔서 돌려주고,
-// 그 형태가 아니면 null을 돌려줍니다. (날짜 입력칸에는 이 형식만 넣을 수 있습니다)
+// "20261231"(YYYYMMDD) 또는 "202512110000"(YYYYMMDDHHmm, 최근 API가 주는 형식)처럼
+// 앞 8자리가 날짜인 숫자 문자열이면 "2026-12-31"로 바꿔서 돌려주고, 그 형태가
+// 아니면 null을 돌려줍니다. (날짜 입력칸에는 "YYYY-MM-DD" 형식만 넣을 수 있습니다)
+// 앞 8자리만 보고 뒤에 시:분 같은 부분은 무시하기 때문에, 나중에 API가 형식을
+// 또 바꾸더라도(날짜 뒤에 다른 값이 더 붙는 정도라면) 계속 잘 동작합니다.
 function parseYmdDate(text) {
-  if (!text || !/^\d{8}$/.test(text)) return null;
-  return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
+  if (!text) return null;
+  const match = String(text).match(/^(\d{4})(\d{2})(\d{2})/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return `${year}-${month}-${day}`;
 }
 
 // 1순위: 식약처 푸드QR 정보서비스(getFoodQrIndctInfo01)는 호출 오류가 잦아서
 // getFoodQrProdList01(푸드QR 목록정보)로 대신 조회합니다.
-// 제품명(PRDT_NM)과 유효종료일자(VLD_END_YMD)를 갖고 있으면 그 값을 돌려주고,
+// 제품명(PRDCT_NM)과 유효종료일자(VLD_END_YMD)를 갖고 있으면 그 값을 돌려주고,
 // 못 찾았거나 요청 자체가 실패하면 null을 돌려줍니다. (에러를 던지지 않고 null로 알려줌)
+//
+// 주의: 이 API 응답 필드명은 문서(Swagger)와 실제 값이 다를 수 있습니다(정부 쪽
+// 데이터 스키마가 시간이 지나며 바뀐 것으로 보입니다). 실제로 확인해보니 제품명은
+// "PRDT_NM"이 아니라 "PRDCT_NM" 필드로 오고 있어서 그 이름으로 읽습니다. 콘솔의
+// "[barcode] 푸드QR API 응답:" 로그로 실제 필드명이 또 바뀌었는지 언제든 확인할 수 있습니다.
 //
 // 주의: VLD_END_YMD는 이름과 달리 "식품의 실제 소비기한"이 아니라
 // "이 QR 데이터(라벨 정보)가 유효한 기간"에 가깝습니다. 실제로 조회해보면 이미 지난 날짜이거나
@@ -417,9 +437,81 @@ async function lookupFoodQr(barcode) {
   if (!items) return null; // 등록된 제품이 없음
 
   const item = Array.isArray(items) ? items[0] : items;
-  if (!item || !item.PRDT_NM) return null;
+  if (!item || !item.PRDCT_NM) return null;
 
-  return { name: item.PRDT_NM, validEndYmd: item.VLD_END_YMD || "" };
+  return { name: item.PRDCT_NM, validEndYmd: item.VLD_END_YMD || "" };
+}
+
+// 1순위(알레르기 정보): 식약처 푸드QR 알레르기정보(getFoodQrAllrgyInfo02)로 조회합니다.
+//
+// 주의: 다른 푸드QR API들(getFoodQrProdList01 등)과 오퍼레이션 버전이 다릅니다.
+// 이 오퍼레이션만 "01"이 아니라 "02"이고, 호스트도 FoodQrInfoService01이 아니라
+// FoodQrInfoService02입니다. (공공데이터포털의 15143798 데이터 Swagger 문서에서
+// 실제 오퍼레이션 이름과 host가 getFoodQrAllrgyInfo02 / FoodQrInfoService02로
+// 정의되어 있는 것을 확인했습니다) 서비스키는 다른 푸드QR API들과 동일하게 재사용합니다.
+//
+// 응답은 제품 하나에 알레르기 성분이 여러 개면 같은 바코드로 item이 여러 줄(row)
+// 나뉘어 옵니다. 그래서 numOfRows를 넉넉히(20) 요청해서 전부 모아 콤마로 이어붙입니다.
+// ALG_CSG_MTR_NM(알레르기유발물질) 값이 이미 한국어라 번역 없이 그대로 씁니다.
+//
+// 성분이 하나도 등록되어 있지 않거나 조회 자체가 실패하면 빈 문자열을 돌려주고,
+// (다른 조회 함수들처럼) 에러를 던지지 않습니다 - 호출한 쪽에서 그대로 2순위로 넘어갑니다.
+async function lookupFoodQrAllergy(barcode) {
+  console.log("[barcode] 푸드QR 알레르기정보 호출 시작, 바코드:", barcode);
+
+  const params = new URLSearchParams({ type: "json", numOfRows: "20", pageNo: "1", brcd_no: barcode });
+  const url = `https://apis.data.go.kr/1471000/FoodQrInfoService02/getFoodQrAllrgyInfo02?serviceKey=${FOOD_QR_SERVICE_KEY}&${params.toString()}`;
+  console.log("[barcode] 푸드QR 알레르기정보 요청 URL:", url);
+
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    console.error("[barcode] 푸드QR 알레르기정보 호출 자체가 실패했어요(네트워크/CORS 등):", error);
+    return "";
+  }
+
+  if (!response.ok) {
+    console.warn("[barcode] 푸드QR 알레르기정보 응답 실패(HTTP 상태 오류):", response.status);
+    return "";
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    console.error("[barcode] 푸드QR 알레르기정보 응답을 JSON으로 해석하는 데 실패했어요:", error);
+    return "";
+  }
+  console.log("[barcode] 푸드QR 알레르기정보 API 응답:", data); // 디버깅용: resultCode와 알레르기 성분 목록을 바로 확인 가능
+
+  if (!data.header || data.header.resultCode !== "00") {
+    console.warn(
+      "[barcode] 푸드QR 알레르기정보 API 에러 응답 - resultCode:",
+      data.header && data.header.resultCode,
+      "/ resultMsg:",
+      data.header && data.header.resultMsg
+    );
+    return "";
+  }
+
+  // 다른 푸드QR API들과 마찬가지로 items가 배열로 바로 오는 경우와 items.item(단일
+  // 객체 또는 배열)으로 오는 경우를 모두 처리합니다.
+  const rawItems = data.body && data.body.items;
+  let items = [];
+  if (Array.isArray(rawItems)) {
+    items = rawItems;
+  } else if (rawItems && rawItems.item) {
+    items = Array.isArray(rawItems.item) ? rawItems.item : [rawItems.item];
+  }
+  if (items.length === 0) return ""; // 이 바코드로 등록된 알레르기 성분이 없음
+
+  const names = items
+    .map((item) => item && item.ALG_CSG_MTR_NM)
+    .filter(Boolean)
+    .filter((name, index, all) => all.indexOf(name) === index); // 중복 제거
+
+  return names.join(", ");
 }
 
 // 2순위: Open Food Facts API로 조회합니다. 제품명만 제공하고 유통기한 정보는 없습니다.
@@ -472,53 +564,94 @@ async function lookupOpenFoodFacts(barcode) {
   return { name: productName, allergyInfo };
 }
 
-// 바코드로 제품 정보를 조회합니다. 1순위(푸드QR) -> 2순위(Open Food Facts) 순서로 시도하고,
-// 팝업 없이 안내 문구만 보여줍니다. 둘 다 실패하면 사용자가 직접 입력하도록 그대로 둡니다.
+// 바코드로 제품 정보를 조회합니다. 이름/유통기한과 알레르기 정보를 각각 따로
+// 1순위 -> 2순위 순서로 시도하고, 팝업 없이 안내 문구만 보여줍니다.
+// 둘 다 실패하면 사용자가 직접 입력하도록 그대로 둡니다.
 async function lookupProduct(barcode) {
   barcodeMessage.textContent = "제품 정보를 찾는 중...";
   expiryAutoNotice.textContent = ""; // 이전 스캔에서 남은 주의 문구를 지웁니다.
   clearAllergyInfoDisplay(); // 이전 스캔에서 남은 알레르기 정보도 지웁니다.
 
+  // ---- 1) 제품명 + 유통기한 참고값: 1순위 푸드QR 목록정보, 실패 시 2순위 Open Food Facts ----
+  let productName = null;
+  let productMessage = "";
+  // Open Food Facts 응답을 한 번만 요청해서 재사용합니다. undefined면 "아직 시도 안 함",
+  // null이면 "시도했지만 실패/없음"이라는 뜻입니다. (아래 알레르기 조회 단계에서 다시 씁니다)
+  let offResult;
+
   try {
     const foodQrResult = await lookupFoodQr(barcode);
     if (foodQrResult) {
-      nameInput.value = foodQrResult.name;
+      productName = foodQrResult.name;
 
       const parsedDate = parseYmdDate(foodQrResult.validEndYmd);
       if (parsedDate) {
         // 유통기한 칸을 채우되, 사용자가 보고 직접 고칠 수 있도록 평범한 입력값으로 넣습니다.
         expiryDateInput.value = parsedDate;
-        barcodeMessage.textContent = "푸드QR에서 제품명과 참고 날짜를 불러왔어요.";
+        productMessage = "푸드QR에서 제품명과 참고 날짜를 불러왔어요.";
         // VLD_END_YMD는 실제로는 "QR 데이터 유효기간"에 가까워서 소비기한과 다를 수 있습니다.
         // 그래서 채워진 날짜 바로 아래에 반드시 이 주의 문구를 같이 보여줍니다.
         expiryAutoNotice.textContent =
           "⚠️ 자동 입력된 날짜예요. 제품 포장에 적힌 실제 유통기한과 다를 수 있으니 확인 후 저장해주세요.";
       } else {
-        barcodeMessage.textContent = "푸드QR에서 제품명을 불러왔어요. 필요하면 수정해도 돼요.";
+        productMessage = "푸드QR에서 제품명을 불러왔어요. 필요하면 수정해도 돼요.";
       }
-      return;
     }
   } catch (error) {
     console.error("[barcode] 푸드QR 조회 중 오류:", error);
     // 여기서 안내 문구를 띄우지 않고 조용히 2순위로 넘어갑니다.
   }
 
-  try {
-    const offResult = await lookupOpenFoodFacts(barcode);
-    if (offResult) {
-      nameInput.value = offResult.name;
-      barcodeMessage.textContent = "제품 정보를 불러왔어요. 필요하면 이름을 수정해도 돼요.";
-      if (offResult.allergyInfo) {
-        showAllergyInfo(offResult.allergyInfo);
-      }
-      return;
+  if (!productName) {
+    try {
+      offResult = await lookupOpenFoodFacts(barcode);
+    } catch (error) {
+      console.error("[barcode] Open Food Facts 조회 중 오류:", error);
+      offResult = null;
     }
-  } catch (error) {
-    console.error("[barcode] Open Food Facts 조회 중 오류:", error);
+    if (offResult) {
+      productName = offResult.name;
+      productMessage = "제품 정보를 불러왔어요. 필요하면 이름을 수정해도 돼요.";
+    }
   }
 
-  // 두 조회가 모두 실패한 경우
-  barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
+  if (!productName) {
+    // 두 조회가 모두 실패한 경우 (알레르기 정보 조회는 시도할 필요도 없이 바로 종료)
+    barcodeMessage.textContent = "제품을 찾지 못했어요. 직접 입력해주세요.";
+    return;
+  }
+
+  nameInput.value = productName;
+  barcodeMessage.textContent = productMessage;
+
+  // ---- 2) 알레르기 정보: 1순위 푸드QR 알레르기정보, 실패/없음 시 2순위 Open Food Facts ----
+  let allergyInfo = "";
+  try {
+    allergyInfo = await lookupFoodQrAllergy(barcode);
+  } catch (error) {
+    console.error("[barcode] 푸드QR 알레르기정보 조회 중 오류:", error);
+  }
+
+  if (!allergyInfo) {
+    // 위에서 이름을 이미 Open Food Facts로 찾았다면(offResult가 정의됨) 그 응답을
+    // 그대로 재사용하고, 아니라면(이름을 푸드QR로 찾은 경우) 알레르기 정보만을 위해
+    // Open Food Facts를 한 번 더 호출합니다.
+    if (offResult === undefined) {
+      try {
+        offResult = await lookupOpenFoodFacts(barcode);
+      } catch (error) {
+        console.error("[barcode] Open Food Facts 조회 중 오류(알레르기 정보):", error);
+        offResult = null;
+      }
+    }
+    if (offResult && offResult.allergyInfo) {
+      allergyInfo = offResult.allergyInfo;
+    }
+  }
+
+  if (allergyInfo) {
+    showAllergyInfo(allergyInfo);
+  }
 }
 
 scanBtn.addEventListener("click", openScanner);
