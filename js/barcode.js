@@ -36,9 +36,11 @@ const scannerCloseBtn = document.getElementById("scanner-close-btn");
 const scannerStatus = document.getElementById("scanner-status");
 const barcodeMessage = document.getElementById("barcode-message");
 const expiryAutoNotice = document.getElementById("expiry-auto-notice");
-// allergyInfoInput, allergyInfoDisplay는 js/form.js에서 이미 선언해 둔 전역 변수를
-// 그대로 재사용합니다(nameInput, expiryDateInput 등과 같은 방식). add.html에서
-// form.js를 barcode.js보다 먼저 불러오기 때문에 이 시점엔 이미 선언되어 있습니다.
+// allergyInfoInput, allergyInfoDisplay와 그 표시 함수들(showAllergyInfo,
+// showNoAllergyInfoNotice, clearAllergyInfoDisplay)은 js/form.js에서 이미
+// 선언해 둔 전역 변수/함수를 그대로 재사용합니다(nameInput, expiryDateInput 등과
+// 같은 방식). add.html에서 form.js를 barcode.js보다 먼저 불러오기 때문에
+// 이 시점엔 이미 선언되어 있습니다.
 
 /*
   아래 매핑 테이블은 2순위(Open Food Facts)에서만 씁니다. Open Food Facts는
@@ -98,21 +100,6 @@ function translateAllergens(tagsOrString) {
     .filter((name, index, all) => all.indexOf(name) === index); // 중복 제거
 
   return names.join(", ");
-}
-
-// 알레르기 정보 표시 영역을 비웁니다. (새 스캔을 시작할 때, 이전 스캔의 정보가
-// 남아있지 않도록 초기화하는 용도로 씁니다)
-function clearAllergyInfoDisplay() {
-  allergyInfoInput.value = "";
-  allergyInfoDisplay.textContent = "";
-  allergyInfoDisplay.hidden = true;
-}
-
-// 알레르기 정보를 화면에 보여주고, 저장용 hidden input에도 값을 채웁니다.
-function showAllergyInfo(allergyInfoText) {
-  allergyInfoInput.value = allergyInfoText;
-  allergyInfoDisplay.textContent = `⚠️ 알레르기 정보: ${allergyInfoText}`;
-  allergyInfoDisplay.hidden = false;
 }
 
 // CDN 스크립트가 어떤 이유로든 로드되지 않았을 수 있어서, 있는지부터 확인합니다.
@@ -651,6 +638,8 @@ async function lookupProduct(barcode) {
 
   if (allergyInfo) {
     showAllergyInfo(allergyInfo);
+  } else {
+    showNoAllergyInfoNotice();
   }
 }
 

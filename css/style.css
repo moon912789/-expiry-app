@@ -253,11 +253,17 @@ main {
   margin: 0;
 }
 
-/* 바코드 스캔(Open Food Facts)으로 알레르기 정보를 찾았을 때만 보이는 문구 */
+/* 알레르기 정보(실제로 찾은 성분)가 있을 때 보이는 문구 - 주의를 끌기 위한 경고색 */
 .allergy-info-display {
   margin: 2px 0 0;
   font-size: 12px;
   color: #c62828;
+}
+
+/* 알레르기 정보를 찾지 못했다는 안내 문구 - 경고가 아니라 단순 안내이므로
+   위 경고색과 구분되는 차분한 회색을 사용합니다 */
+.allergy-info-display.allergy-info-notice {
+  color: #757575;
 }
 
 /* 바코드 스캔 화면 전체를 덮는 오버레이 */

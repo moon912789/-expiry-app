@@ -23,6 +23,41 @@ const deleteBtn = document.getElementById("delete-btn");
 const formTitle = document.getElementById("form-title");
 const form = document.getElementById("item-form");
 
+/*
+  알레르기 정보 표시 함수 3종입니다. barcode.js도 스캔 완료 후 이 함수들을 그대로
+  재사용합니다(nameInput, expiryDateInput 등을 barcode.js가 재사용하는 것과 같은
+  방식입니다 - add.html에서 form.js를 barcode.js보다 먼저 불러오기 때문에 가능합니다).
+*/
+
+// 알레르기 정보를 화면에 보여주고, 저장용 hidden input에도 값을 채웁니다.
+function showAllergyInfo(allergyInfoText) {
+  allergyInfoInput.value = allergyInfoText;
+  allergyInfoDisplay.textContent = `⚠️ 알레르기 정보: ${allergyInfoText}`;
+  allergyInfoDisplay.className = "allergy-info-display";
+  allergyInfoDisplay.hidden = false;
+}
+
+// 알레르기 정보를 "확인은 했지만 찾지 못한" 경우(조회 API 둘 다 실패/빈 값,
+// 또는 수동으로 입력해서 애초에 조회한 적이 없는 기존 항목)에 안내 문구를 보여줍니다.
+// 저장용 hidden input 값은 비워둡니다(실제로 알레르기 정보가 있는 게 아니므로).
+function showNoAllergyInfoNotice() {
+  allergyInfoInput.value = "";
+  allergyInfoDisplay.textContent =
+    "ℹ️ 이 제품은 알레르기 정보가 데이터베이스에 등록되어 있지 않아요. 포장지를 직접 확인해주세요.";
+  allergyInfoDisplay.className = "allergy-info-display allergy-info-notice";
+  allergyInfoDisplay.hidden = false;
+}
+
+// 알레르기 정보 표시 영역을 완전히 숨깁니다. "새 항목 추가" 화면을 막 열어서 아직
+// 아무것도 스캔/확인하지 않은 초기 상태, 또는 스캔을 다시 시작해서 이전 결과를
+// 지워야 할 때 씁니다. (이 상태에서는 안내 문구도 띄우지 않습니다 - 아직 "조회를
+// 시도했지만 없었다"는 게 아니라 "아직 아무것도 안 해본" 상태이기 때문입니다)
+function clearAllergyInfoDisplay() {
+  allergyInfoInput.value = "";
+  allergyInfoDisplay.textContent = "";
+  allergyInfoDisplay.hidden = true;
+}
+
 // 구매일 입력칸의 기본값을 오늘 날짜로 채워둡니다. (요구사항: 구매일 기본값 오늘)
 purchaseDateInput.value = getTodayString();
 
@@ -38,12 +73,15 @@ if (editId) {
     alertDaysInput.value = item.alertDays;
     memoInput.value = item.memo;
 
-    // 알레르기 정보는 바코드 스캔으로만 채워지는 값이라 직접 입력하는 칸은 없고,
-    // 기존에 저장된 값이 있으면 그대로 화면에 보여주기만 합니다.
+    // 알레르기 정보는 바코드 스캔으로만 채워지는 값이라 직접 입력하는 칸은 없습니다.
+    // 기존에 저장된 값이 있으면 그대로 보여주고, 없으면(수동으로 입력한 항목이거나
+    // 스캔은 했지만 알레르기 정보를 못 찾았던 항목) "등록되어 있지 않다"는 안내
+    // 문구를 보여줍니다. (요구사항: 수정 화면에서 항목을 열었을 때는 항상 둘 중
+    // 하나를 보여주고, 목록 화면처럼 정보가 있을 때만 표시하는 방식은 아닙니다)
     if (item.allergyInfo) {
-      allergyInfoInput.value = item.allergyInfo;
-      allergyInfoDisplay.textContent = `⚠️ 알레르기 정보: ${item.allergyInfo}`;
-      allergyInfoDisplay.hidden = false;
+      showAllergyInfo(item.allergyInfo);
+    } else {
+      showNoAllergyInfoNotice();
     }
 
     // 카테고리 라디오 버튼 중 이 항목의 카테고리와 같은 것을 선택 상태로 만듭니다.
