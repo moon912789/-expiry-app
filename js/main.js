@@ -18,6 +18,12 @@ document.querySelectorAll(".category-tab").forEach((tab) => {
   iconSlot.innerHTML = category === "all" ? ALL_CATEGORIES_ICON_SVG : CATEGORY_ICONS_SVG[category] || "";
 });
 
+// "캘린더 보기" 버튼에도 같은 방식으로 커스텀 SVG 아이콘을 채워 넣습니다. (이모지 대신)
+const calendarBtnIconSlot = document.querySelector(".calendar-btn .cat-icon-slot");
+if (calendarBtnIconSlot) {
+  calendarBtnIconSlot.innerHTML = CALENDAR_ICON_SVG;
+}
+
 // 지금 선택된 카테고리 탭 ("all"이면 전체 보기)
 let currentCategoryFilter = "all";
 

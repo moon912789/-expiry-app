@@ -111,10 +111,39 @@ body {
   line-height: 1;
 }
 
-.calendar-btn {
-  font-size: 20px;
-  line-height: 1;
+/*
+  헤더에 올라가는 아이콘 전용 버튼(원형, 옅은 배경)의 공통 스타일입니다.
+  "캘린더 보기" 버튼처럼 이모지 대신 커스텀 SVG 아이콘(js/icons.js)을
+  쓰는 버튼에 붙여서, 초록색 "+ 추가" 버튼과 나란히 있어도 튀지 않고
+  차분하게 어울리도록 만듭니다.
+*/
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background-color: var(--stone-100);
+  color: var(--stone-700);
   text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background-color: var(--stone-200);
+}
+
+.icon-btn .cat-icon-slot {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}
+
+.icon-btn .cat-icon-slot .cat-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 main {

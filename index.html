@@ -45,7 +45,12 @@
   -->
   <header class="app-header">
     <h1>유통기한 관리</h1>
-    <a href="calendar.html" class="calendar-btn" aria-label="캘린더 보기">📅</a>
+    <!-- 아이콘(.cat-icon-slot 안)은 비어있는 채로 두고, main.js가 js/icons.js의
+         CALENDAR_ICON_SVG를 읽어서 채워 넣습니다. (다른 카테고리 아이콘과 같은
+         선 스타일로 통일하기 위해 이모지 대신 커스텀 SVG를 씁니다) -->
+    <a href="calendar.html" class="calendar-btn icon-btn" aria-label="캘린더 보기">
+      <span class="cat-icon-slot"></span>
+    </a>
     <a href="add.html" class="add-btn">+ 추가</a>
   </header>
 

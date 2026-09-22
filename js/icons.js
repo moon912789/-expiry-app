@@ -57,3 +57,11 @@ const ALL_CATEGORIES_ICON_SVG = `<svg viewBox="0 0 24 24" class="cat-icon" aria-
   <rect x="4" y="13" width="7" height="7" rx="1.5"></rect>
   <rect x="13" y="13" width="7" height="7" rx="1.5"></rect>
 </svg>`;
+
+// 메인 화면 헤더의 "캘린더 보기" 버튼에 쓰는 아이콘 (이모지 📅 대신 사용)
+const CALENDAR_ICON_SVG = `<svg viewBox="0 0 24 24" class="cat-icon" aria-hidden="true" focusable="false">
+  <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+  <line x1="3" y1="10" x2="21" y2="10"></line>
+  <line x1="8" y1="3" x2="8" y2="7"></line>
+  <line x1="16" y1="3" x2="16" y2="7"></line>
+</svg>`;
