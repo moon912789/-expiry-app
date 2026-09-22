@@ -208,6 +208,7 @@ main.page-main {
 .item-icon .cat-icon {
   width: 15px;
   height: 15px;
+  flex-shrink: 0;
 }
 
 .item-dday {
@@ -288,16 +289,24 @@ main.page-main {
   box-shadow: 0 0 0 3px var(--green-100);
 }
 
-/* 추가/수정 화면의 카테고리 선택 (라디오 버튼을 알약 모양 버튼처럼 꾸민 것) */
+/*
+  추가/수정 화면의 카테고리 선택 (라디오 버튼을 카드형 버튼처럼 꾸민 것)
+  4개(상온/냉장/냉동/화장품)가 폭 360~400px인 모바일 화면에서도 가로 스크롤이나
+  줄바꿈 없이 한 줄에 들어오도록, 메인 화면의 카테고리 필터 탭(.category-tab)과
+  똑같은 방식(flex: 1로 4등분 + 아이콘/라벨을 위아래로 쌓기)을 씁니다.
+  (min-width: 0을 안 주면 flex 아이템이 내용 길이만큼 늘어나려고 해서
+  일부 버튼이 좁아지지 않고 넘칠 수 있어 꼭 같이 넣어야 합니다)
+*/
 .category-options {
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
   margin-top: 3px;
 }
 
 .category-option {
   position: relative;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .category-option input[type="radio"] {
@@ -307,22 +316,46 @@ main.page-main {
   height: 1px;
 }
 
-.category-option span {
-  display: inline-flex;
+/*
+  주의: 아래 선택자는 반드시 ".category-option > span"(자식 결합자)으로 써야 합니다.
+  ".category-option span"(하위 결합자)으로 쓰면 안쪽에 새로 추가한
+  span.cat-icon-slot / span.option-label 에도 이 스타일(특히 flex-direction:
+  column, padding 등)이 함께 적용되어 아이콘 크기가 0으로 찌그러지는 문제가
+  있었습니다. (직접 겪은 버그라 이렇게 주석을 남겨둡니다)
+*/
+.category-option > span {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 7px 12px;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 2px 7px;
   border: 1px solid var(--stone-200);
-  border-radius: 999px;
-  font-size: 12px;
+  border-radius: 12px;
+  font-size: 10.5px;
   color: var(--stone-600);
   cursor: pointer;
   user-select: none;
 }
 
+.option-label {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-option .cat-icon-slot {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 .category-option .cat-icon-slot .cat-icon {
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .category-option input[type="radio"]:checked + span {
@@ -618,6 +651,7 @@ main.page-main {
 .tab-icon-slot .cat-icon {
   width: 18px;
   height: 18px;
+  flex-shrink: 0;
 }
 
 .tab-label {
@@ -820,8 +854,8 @@ main.page-main {
   }
 
   .category-option span {
-    padding: 6px 11px;
-    font-size: 12px;
+    padding: 8px 2px 7px;
+    font-size: 10.5px;
   }
 
   .barcode-btn {
@@ -885,8 +919,8 @@ main.page-main {
   }
 
   .category-option span {
-    padding: 7px 12px;
-    font-size: 13px;
+    padding: 9px 2px 8px;
+    font-size: 11px;
   }
 
   .barcode-btn {
