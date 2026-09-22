@@ -23,6 +23,16 @@ const deleteBtn = document.getElementById("delete-btn");
 const formTitle = document.getElementById("form-title");
 const form = document.getElementById("item-form");
 
+// 카테고리 선택 버튼마다 js/icons.js에 정의된 커스텀 SVG 아이콘을 채워 넣습니다.
+// (목록 화면/필터 탭과 완전히 같은 아이콘이 보이도록, 아이콘 자체는 icons.js
+// 한 곳에서만 관리하고 여기서는 그 자리에 꽂아 넣기만 합니다)
+document.querySelectorAll(".category-option").forEach((option) => {
+  const iconSlot = option.querySelector(".cat-icon-slot");
+  if (iconSlot) {
+    iconSlot.innerHTML = CATEGORY_ICONS_SVG[option.dataset.category] || "";
+  }
+});
+
 /*
   알레르기 정보 표시 함수 3종입니다. barcode.js도 스캔 완료 후 이 함수들을 그대로
   재사용합니다(nameInput, expiryDateInput 등을 barcode.js가 재사용하는 것과 같은

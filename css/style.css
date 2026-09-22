@@ -1,18 +1,67 @@
 /*
   style.css
-  - 두 화면(index.html, add.html)이 공통으로 사용하는 스타일입니다.
-  - 색상 규칙: 초록(green)=여유 있음, 노랑(yellow)=임박, 빨강(red)=오늘/지남
+  - 세 화면(index.html, add.html, calendar.html)이 공통으로 사용하는 스타일입니다.
+  - 색상 규칙: 초록(green)=여유 있음, 황토(yellow)=임박, 붉은흙(red)=오늘/지남
+    (원색 대신 톤을 낮춘 색으로 통일했습니다. 실제 색상 값은 :root의 변수를 씁니다)
 */
 
 * {
   box-sizing: border-box;
 }
 
+:root {
+  /* 무채색(배경/테두리/글자) - 완전한 흰/검정 대신 살짝 따뜻한 톤 */
+  --stone-50: #f7f6f3;
+  --stone-100: #efece5;
+  --stone-200: #e1dccf;
+  --stone-300: #cec5b0;
+  --stone-400: #a89e88;
+  --stone-600: #6b6353;
+  --stone-700: #4f4838;
+  --stone-800: #302b21;
+
+  /* 초록 - 브랜드 색상 겸 "여유 있음" 상태 색상 */
+  --green-100: #e6ebe1;
+  --green-600: #6d8768;
+  --green-700: #536b4f;
+  --green-800: #364630;
+
+  /* 황토 - "임박" 상태 색상 */
+  --amber-100: #f8efdc;
+  --amber-600: #c69a4c;
+  --amber-800: #7c5c24;
+
+  /* 붉은흙(테라코타) - "오늘/지남" 상태 색상 */
+  --rose-100: #f6e7e2;
+  --rose-600: #bd6b57;
+  --rose-700: #9f5240;
+  --rose-800: #723c2d;
+
+  --shadow-card: 0 1px 2px rgba(48, 43, 33, 0.06), 0 2px 6px rgba(48, 43, 33, 0.05);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
-  background-color: #f5f5f5;
-  color: #222;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  background-color: var(--stone-50);
+  color: var(--stone-800);
+}
+
+/*
+  카테고리 커스텀 SVG 아이콘(js/icons.js) 공통 스타일입니다.
+  선 색은 SVG 안에 직접 넣지 않고 currentColor를 써서, 아이콘을 담는
+  부모 요소(.item-icon, .tab-icon-slot, .cat-icon-slot 등)의 글자색을
+  그대로 따라가도록 합니다. 크기는 각 부모 요소 쪽 CSS에서 따로 정합니다.
+*/
+.cat-icon {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
 }
 
 /* 상단 헤더 (제목 + 버튼) */
@@ -22,30 +71,39 @@ body {
   gap: 12px;
   padding: 10px 16px;
   background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--stone-200);
+  box-shadow: 0 1px 2px rgba(48, 43, 33, 0.04);
   position: sticky;
   top: 0;
 }
 
 .app-header h1 {
   flex: 1;
-  font-size: 20px;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
+  color: var(--stone-800);
 }
 
 .add-btn,
 .back-btn {
   text-decoration: none;
-  color: #333;
-  font-weight: bold;
+  color: var(--stone-700);
+  font-weight: 600;
 }
 
 .add-btn {
-  background-color: #4caf50;
+  background-color: var(--green-700);
   color: #fff;
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  transition: background-color 0.15s ease;
+}
+
+.add-btn:hover {
+  background-color: var(--green-800);
 }
 
 .back-btn {
@@ -65,6 +123,14 @@ main {
   padding: 10px 16px;
 }
 
+/* index.html / calendar.html 처럼 화면 높이에 맞춰 촘촘하게 줄일 필요가 없는
+   화면에는 이 클래스를 추가로 붙여서 여백을 조금 더 넉넉하게 줍니다.
+   (add.html의 <main>에는 붙이지 않습니다 - 그 화면은 낮은 화면 높이에서도
+   스크롤 없이 다 들어오도록 촘촘한 기본 여백을 그대로 유지해야 합니다) */
+main.page-main {
+  padding: 16px 16px 28px;
+}
+
 /* 항목 목록 */
 .item-list {
   list-style: none;
@@ -72,70 +138,101 @@ main {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .item-list .empty {
   text-align: center;
-  color: #888;
+  color: var(--stone-400);
   padding: 40px 0;
 }
 
 .item {
   background-color: #fff;
-  border-radius: 8px;
-  border-left: 6px solid #ccc;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  border-left: 4px solid var(--stone-300);
+  box-shadow: var(--shadow-card);
 }
 
 /* 남은 일수에 따른 상태 색상 */
 .item.green {
-  border-left-color: #4caf50;
+  border-left-color: var(--green-600);
 }
 
 .item.yellow {
-  border-left-color: #ffc107;
+  border-left-color: var(--amber-600);
 }
 
 .item.red {
-  border-left-color: #f44336;
+  border-left-color: var(--rose-600);
 }
 
 .item-link {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   padding: 14px 16px;
   text-decoration: none;
   color: inherit;
 }
 
 .item-name {
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15.5px;
   font-weight: 500;
+  min-width: 0;
+}
+
+.item-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 목록 카드의 카테고리 아이콘을 담는 작은 사각 배지 */
+.item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background-color: var(--stone-100);
+  color: var(--stone-600);
+}
+
+.item-icon .cat-icon {
+  width: 15px;
+  height: 15px;
 }
 
 .item-dday {
-  font-size: 14px;
-  font-weight: bold;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 700;
   padding: 4px 10px;
-  border-radius: 12px;
-  background-color: #eee;
+  border-radius: 999px;
+  background-color: var(--stone-100);
+  color: var(--stone-700);
 }
 
 .item.green .item-dday {
-  color: #2e7d32;
-  background-color: #e8f5e9;
+  color: var(--green-800);
+  background-color: var(--green-100);
 }
 
 .item.yellow .item-dday {
-  color: #b28704;
-  background-color: #fff8e1;
+  color: var(--amber-800);
+  background-color: var(--amber-100);
 }
 
 .item.red .item-dday {
-  color: #c62828;
-  background-color: #ffebee;
+  color: var(--rose-800);
+  background-color: var(--rose-100);
 }
 
 /*
@@ -153,7 +250,7 @@ main {
 
 .item-form label {
   font-size: 12px;
-  color: #555;
+  color: var(--stone-600);
   margin-top: 3px;
 }
 
@@ -162,8 +259,10 @@ main {
 .item-form input[type="number"] {
   padding: 6px 8px;
   font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid var(--stone-200);
+  border-radius: 10px;
+  background-color: #fff;
+  color: var(--stone-800);
 }
 
 /* 메모는 여러 줄을 편하게 쓸 수 있도록 3~4줄(약 80px) 높이를 확보합니다.
@@ -172,10 +271,21 @@ main {
   padding: 6px 8px;
   font-size: 14px;
   font-family: inherit;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid var(--stone-200);
+  border-radius: 10px;
+  background-color: #fff;
+  color: var(--stone-800);
   min-height: 80px;
   resize: vertical;
+}
+
+.item-form input[type="text"]:focus,
+.item-form input[type="date"]:focus,
+.item-form input[type="number"]:focus,
+.item-form textarea:focus {
+  outline: none;
+  border-color: var(--green-600);
+  box-shadow: 0 0 0 3px var(--green-100);
 }
 
 /* 추가/수정 화면의 카테고리 선택 (라디오 버튼을 알약 모양 버튼처럼 꾸민 것) */
@@ -198,24 +308,32 @@ main {
 }
 
 .category-option span {
-  display: inline-block;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1px solid var(--stone-200);
   border-radius: 999px;
   font-size: 12px;
+  color: var(--stone-600);
   cursor: pointer;
   user-select: none;
 }
 
+.category-option .cat-icon-slot .cat-icon {
+  width: 15px;
+  height: 15px;
+}
+
 .category-option input[type="radio"]:checked + span {
-  border-color: #4caf50;
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  font-weight: bold;
+  border-color: var(--green-600);
+  background-color: var(--green-100);
+  color: var(--green-800);
+  font-weight: 700;
 }
 
 .category-option input[type="radio"]:focus-visible + span {
-  outline: 2px solid #4caf50;
+  outline: 2px solid var(--green-600);
   outline-offset: 2px;
 }
 
@@ -223,22 +341,22 @@ main {
 .barcode-btn {
   margin-top: 0;
   padding: 6px 0;
-  border: 1px solid #4caf50;
+  border: 1px solid var(--green-600);
   background-color: #fff;
-  color: #4caf50;
-  border-radius: 6px;
+  color: var(--green-700);
+  border-radius: 10px;
   font-size: 13px;
   cursor: pointer;
 }
 
 .barcode-btn:hover {
-  background-color: #e8f5e9;
+  background-color: var(--green-100);
 }
 
 .barcode-message {
   margin: 2px 0 0;
   font-size: 11px;
-  color: #777;
+  color: var(--stone-600);
   min-height: 12px; /* 문구가 없을 때도 레이아웃이 안 흔들리도록 자리를 미리 잡아둠 */
 }
 
@@ -246,7 +364,7 @@ main {
 .expiry-notice {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #b28704;
+  color: var(--amber-800);
 }
 
 .expiry-notice:empty {
@@ -257,13 +375,13 @@ main {
 .allergy-info-display {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #c62828;
+  color: var(--rose-700);
 }
 
 /* 알레르기 정보를 찾지 못했다는 안내 문구 - 경고가 아니라 단순 안내이므로
    위 경고색과 구분되는 차분한 회색을 사용합니다 */
 .allergy-info-display.allergy-info-notice {
-  color: #757575;
+  color: var(--stone-400);
 }
 
 /* 바코드 스캔 화면 전체를 덮는 오버레이 */
@@ -292,7 +410,7 @@ main {
                         떠 있어도 카메라 화면이 그 뒤로 가려지지 않도록 상한선을 둡니다 */
   overflow-y: auto; /* 내용이 상한선보다 커지는 드문 경우에도 잘리지 않고 스크롤되게 함 */
   background-color: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 16px;
 }
 
@@ -301,14 +419,15 @@ main {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
-  font-weight: bold;
+  font-weight: 700;
+  color: var(--stone-800);
 }
 
 .scanner-close-btn {
   border: none;
   background: none;
   font-size: 18px;
-  color: #555;
+  color: var(--stone-600);
   cursor: pointer;
 }
 
@@ -325,7 +444,7 @@ main {
 #barcode-reader {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden; /* object-fit: cover로 영상이 컨테이너보다 커질 때 밖으로 삐져나가지 않게 함 */
 }
 
@@ -347,14 +466,14 @@ main {
   margin: 12px 0 0;
   text-align: center;
   font-size: 14px;
-  color: #555;
+  color: var(--stone-700);
 }
 
 .scanner-tip {
   margin: 8px 0 0;
   text-align: center;
   font-size: 12px;
-  color: #888;
+  color: var(--stone-400);
 }
 
 .quick-buttons {
@@ -367,18 +486,23 @@ main {
   flex: 1;
   padding: 5px 0;
   font-size: 12px;
-  border: 1px solid #4caf50;
+  border: 1px solid var(--stone-200);
   background-color: #fff;
-  color: #4caf50;
-  border-radius: 6px;
+  color: var(--stone-700);
+  border-radius: 10px;
   cursor: pointer;
+}
+
+.quick-btn:hover {
+  background-color: var(--stone-100);
 }
 
 /* 버튼으로 값을 골랐을 때(알림일수) 선택된 상태를 표시 */
 .quick-btn.active {
-  background-color: #4caf50;
+  background-color: var(--green-700);
+  border-color: var(--green-700);
   color: #fff;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 /* 알림일수: 버튼들 + 직접 입력칸을 한 줄에 나란히 배치해서 세로 공간을 아낍니다 */
@@ -399,29 +523,34 @@ main {
   text-align: center;
 }
 
-.quick-btn:hover {
-  background-color: #e8f5e9;
-}
-
 .save-btn,
 .delete-btn {
   margin-top: 5px;
   padding: 8px 0;
   font-size: 14px;
+  font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
 .save-btn {
-  background-color: #4caf50;
+  background-color: var(--green-700);
   color: #fff;
+}
+
+.save-btn:hover {
+  background-color: var(--green-800);
 }
 
 .delete-btn {
   background-color: #fff;
-  color: #f44336;
-  border: 1px solid #f44336;
+  color: var(--rose-700);
+  border: 1px solid var(--rose-600);
+}
+
+.delete-btn:hover {
+  background-color: var(--rose-100);
 }
 
 /* 메인 화면: "지금 알림 받아야 할 항목" 강조 섹션 */
@@ -435,17 +564,18 @@ main {
 
 .alert-heading {
   font-size: 15px;
+  font-weight: 700;
   margin: 0 0 10px;
-  color: #c62828;
+  color: var(--rose-800);
 }
 
 /* 메인 화면: 카테고리 필터 탭 */
 .category-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   scrollbar-width: none; /* 파이어폭스: 스크롤바 숨기기 */
   -ms-overflow-style: none; /* 구형 엣지/IE: 스크롤바 숨기기 */
 }
@@ -460,29 +590,53 @@ main {
   가로 스크롤 없이 한 줄에 들어오도록 flex: 1로 5등분합니다.
   (min-width: 0을 안 주면 flex 아이템이 내용 길이만큼 늘어나려고 해서
   일부 탭이 좁아지지 않고 넘칠 수 있어 꼭 같이 넣어야 합니다)
+  아이콘 위에 라벨을 두는 세로 배치라, 글자만 있던 예전 버전보다 한 줄에
+  들어가는 너비 여유가 더 넉넉합니다.
 */
 .category-tab {
   flex: 1 1 0;
   min-width: 0;
-  padding: 10px 2px;
-  border: 1px solid #ccc;
-  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 2px 7px;
+  border: 1px solid var(--stone-200);
+  border-radius: 12px;
   background-color: #fff;
-  color: #555;
-  font-size: 12px;
+  color: var(--stone-600);
   cursor: pointer;
+}
+
+.tab-icon-slot {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}
+
+.tab-icon-slot .cat-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.tab-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: center;
 }
 
 .category-tab.active {
-  background-color: #4caf50;
-  border-color: #4caf50;
+  background-color: var(--green-700);
+  border-color: var(--green-700);
   color: #fff;
-  font-weight: bold;
+  font-weight: 700;
 }
+
+/* 아이콘이 currentColor를 따르므로, 탭이 선택됐을 때 아이콘도 자동으로 흰색이 됩니다 */
 
 /* 목록 카드: 메모가 있는 항목 옆에 붙는 작은 표시 */
 .memo-badge {
@@ -499,7 +653,7 @@ main {
   display: block;
   padding: 0 16px 12px;
   font-size: 12px;
-  color: #4caf50;
+  color: var(--green-700);
   text-decoration: none;
 }
 
@@ -519,20 +673,22 @@ main {
 
 .calendar-title {
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 700;
+  color: var(--stone-800);
 }
 
 .nav-btn {
   background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid var(--stone-200);
+  color: var(--stone-700);
+  border-radius: 10px;
   padding: 6px 14px;
   font-size: 16px;
   cursor: pointer;
 }
 
 .nav-btn:hover {
-  background-color: #f0f0f0;
+  background-color: var(--stone-100);
 }
 
 /* 요일 헤더 + 날짜 칸을 7칸짜리 격자로 배치 */
@@ -545,7 +701,7 @@ main {
 .calendar-weekday {
   text-align: center;
   font-size: 12px;
-  color: #888;
+  color: var(--stone-400);
   padding: 6px 0;
 }
 
@@ -559,13 +715,14 @@ main {
   gap: 2px;
   background-color: #fff;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
+  color: var(--stone-700);
 }
 
 .calendar-day:hover {
-  background-color: #f0f0f0;
+  background-color: var(--stone-100);
 }
 
 .calendar-day.empty {
@@ -575,14 +732,15 @@ main {
 
 /* 오늘 날짜 */
 .calendar-day.today {
-  border-color: #4caf50;
-  font-weight: bold;
+  border-color: var(--green-600);
+  font-weight: 700;
+  color: var(--stone-800);
 }
 
 /* 사용자가 클릭해서 선택한 날짜 */
 .calendar-day.selected {
-  background-color: #e8f5e9;
-  border-color: #4caf50;
+  background-color: var(--green-100);
+  border-color: var(--green-600);
 }
 
 /* 그 날짜가 유통기한인 항목 개수를 보여주는 작은 동그라미 배지 */
@@ -592,7 +750,7 @@ main {
   padding: 0 4px;
   border-radius: 999px;
   font-size: 10px;
-  font-weight: bold;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -600,16 +758,16 @@ main {
 }
 
 .day-badge.green {
-  background-color: #4caf50;
+  background-color: var(--green-700);
 }
 
 .day-badge.yellow {
-  background-color: #ffc107;
-  color: #333;
+  background-color: var(--amber-600);
+  color: var(--amber-800);
 }
 
 .day-badge.red {
-  background-color: #f44336;
+  background-color: var(--rose-700);
 }
 
 /* 날짜를 클릭했을 때 달력 아래에 나타나는 항목 목록 영역 */
@@ -773,5 +931,7 @@ main {
 
 .selected-day-heading {
   font-size: 15px;
+  font-weight: 700;
   margin: 0 0 10px;
+  color: var(--stone-800);
 }

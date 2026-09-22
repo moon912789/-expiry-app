@@ -142,9 +142,17 @@ function renderSelectedDayItems(items) {
 
     const nameSpan = document.createElement("span");
     nameSpan.className = "item-name";
-    // 메인 화면(main.js)과 같은 방식으로 카테고리 이모지를 이름 앞에 붙입니다.
-    const categoryIcon = CATEGORY_ICONS[item.category] || "";
-    nameSpan.textContent = `${categoryIcon} ${item.name}`;
+
+    // 메인 화면(main.js)과 같은 방식으로 카테고리 아이콘(js/icons.js)을 이름 앞에 붙입니다.
+    const iconSpan = document.createElement("span");
+    iconSpan.className = "item-icon";
+    iconSpan.innerHTML = CATEGORY_ICONS_SVG[item.category] || "";
+    nameSpan.appendChild(iconSpan);
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "item-name-text";
+    textSpan.textContent = item.name;
+    nameSpan.appendChild(textSpan);
 
     if (item.memo) {
       const memoBadge = document.createElement("span");

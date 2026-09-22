@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>항목 추가/수정</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4caf50">
+  <meta name="theme-color" content="#536b4f">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -70,23 +71,26 @@
       <input type="text" id="name" placeholder="예: 우유, 계란, 스킨로션" required>
 
       <label>카테고리</label>
-      <!-- 라디오 버튼을 버튼처럼 꾸민 것입니다. required를 걸어서 하나는 꼭 고르도록 합니다. -->
+      <!-- 라디오 버튼을 버튼처럼 꾸민 것입니다. required를 걸어서 하나는 꼭 고르도록 합니다.
+           아이콘(.cat-icon-slot 안)은 비어있는 채로 두고, js/form.js가 js/icons.js의
+           CATEGORY_ICONS_SVG를 읽어서 채워 넣습니다. (목록 화면/필터 탭과 완전히
+           같은 아이콘을 쓰기 위해 한 곳에서만 관리합니다) -->
       <div class="category-options" role="radiogroup" aria-label="카테고리 선택">
-        <label class="category-option">
+        <label class="category-option" data-category="상온">
           <input type="radio" name="category" value="상온" required>
-          <span>🥫 상온</span>
+          <span><span class="cat-icon-slot"></span>상온</span>
         </label>
-        <label class="category-option">
+        <label class="category-option" data-category="냉장">
           <input type="radio" name="category" value="냉장" required>
-          <span>🧊 냉장</span>
+          <span><span class="cat-icon-slot"></span>냉장</span>
         </label>
-        <label class="category-option">
+        <label class="category-option" data-category="냉동">
           <input type="radio" name="category" value="냉동" required>
-          <span>❄️ 냉동</span>
+          <span><span class="cat-icon-slot"></span>냉동</span>
         </label>
-        <label class="category-option">
+        <label class="category-option" data-category="화장품">
           <input type="radio" name="category" value="화장품" required>
-          <span>🧴 화장품</span>
+          <span><span class="cat-icon-slot"></span>화장품</span>
         </label>
       </div>
 
@@ -149,6 +153,7 @@
   </div>
 
   <script src="js/storage.js"></script>
+  <script src="js/icons.js"></script>
   <script src="js/dateUtils.js"></script>
   <script src="js/form.js"></script>
   <!-- 바코드 스캔 라이브러리 (npm 설치 없이 CDN에서 바로 불러와서 사용합니다) -->

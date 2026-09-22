@@ -9,6 +9,15 @@
   남은 일수/색상을 계산합니다.
 */
 
+// 카테고리 필터 탭마다 js/icons.js에 정의된 커스텀 SVG 아이콘을 채워 넣습니다.
+// ("전체" 탭은 ALL_CATEGORIES_ICON_SVG를, 나머지는 CATEGORY_ICONS_SVG를 사용합니다)
+document.querySelectorAll(".category-tab").forEach((tab) => {
+  const iconSlot = tab.querySelector(".tab-icon-slot");
+  if (!iconSlot) return;
+  const category = tab.dataset.category;
+  iconSlot.innerHTML = category === "all" ? ALL_CATEGORIES_ICON_SVG : CATEGORY_ICONS_SVG[category] || "";
+});
+
 // 지금 선택된 카테고리 탭 ("all"이면 전체 보기)
 let currentCategoryFilter = "all";
 
@@ -21,7 +30,6 @@ function createItemCard(item) {
   const remainingDays = getRemainingDays(item.expiryDate);
   const statusClass = getStatusClass(remainingDays);
   const ddayText = formatDday(remainingDays);
-  const categoryIcon = CATEGORY_ICONS[item.category] || "";
 
   const li = document.createElement("li");
   li.className = `item ${statusClass}`;
@@ -32,8 +40,17 @@ function createItemCard(item) {
 
   const nameSpan = document.createElement("span");
   nameSpan.className = "item-name";
-  // 카테고리 이모지 + 이름 순서로 표시 (예: "🧊 우유")
-  nameSpan.textContent = `${categoryIcon} ${item.name}`;
+
+  // 카테고리 아이콘(js/icons.js) + 품목명 순서로 표시
+  const iconSpan = document.createElement("span");
+  iconSpan.className = "item-icon";
+  iconSpan.innerHTML = CATEGORY_ICONS_SVG[item.category] || "";
+  nameSpan.appendChild(iconSpan);
+
+  const textSpan = document.createElement("span");
+  textSpan.className = "item-name-text";
+  textSpan.textContent = item.name;
+  nameSpan.appendChild(textSpan);
 
   // 메모가 있는 항목에만 📝 표시를 덧붙입니다.
   if (item.memo) {

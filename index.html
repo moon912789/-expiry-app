@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>유통기한 관리</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4caf50">
+  <meta name="theme-color" content="#536b4f">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -48,17 +49,37 @@
     <a href="add.html" class="add-btn">+ 추가</a>
   </header>
 
-  <main>
+  <main class="page-main">
     <!-- 남은 일수가 alertDays 이하인 항목을 모아서 강조해서 보여주는 영역 (main.js가 채움) -->
     <section id="alert-section" class="alert-section"></section>
 
-    <!-- 카테고리 필터 탭: 누르면 main.js가 해당 카테고리 항목만 보여줍니다 -->
+    <!--
+      카테고리 필터 탭: 누르면 main.js가 해당 카테고리 항목만 보여줍니다.
+      아이콘(.tab-icon-slot 안)은 비어있는 채로 두고, main.js가 js/icons.js의
+      CATEGORY_ICONS_SVG를 읽어서 채워 넣습니다. (목록 카드/추가 화면의
+      카테고리 선택과 완전히 같은 아이콘을 쓰기 위해 한 곳에서만 관리합니다)
+    -->
     <div id="category-tabs" class="category-tabs">
-      <button type="button" class="category-tab active" data-category="all">전체</button>
-      <button type="button" class="category-tab" data-category="상온">🥫 상온</button>
-      <button type="button" class="category-tab" data-category="냉장">🧊 냉장</button>
-      <button type="button" class="category-tab" data-category="냉동">❄️ 냉동</button>
-      <button type="button" class="category-tab" data-category="화장품">🧴 화장품</button>
+      <button type="button" class="category-tab active" data-category="all">
+        <span class="tab-icon-slot"></span>
+        <span class="tab-label">전체</span>
+      </button>
+      <button type="button" class="category-tab" data-category="상온">
+        <span class="tab-icon-slot"></span>
+        <span class="tab-label">상온</span>
+      </button>
+      <button type="button" class="category-tab" data-category="냉장">
+        <span class="tab-icon-slot"></span>
+        <span class="tab-label">냉장</span>
+      </button>
+      <button type="button" class="category-tab" data-category="냉동">
+        <span class="tab-icon-slot"></span>
+        <span class="tab-label">냉동</span>
+      </button>
+      <button type="button" class="category-tab" data-category="화장품">
+        <span class="tab-icon-slot"></span>
+        <span class="tab-label">화장품</span>
+      </button>
     </div>
 
     <ul id="item-list" class="item-list">
@@ -69,10 +90,12 @@
   <!--
     스크립트는 아래 순서로 불러와야 합니다.
     1) storage.js  : localStorage에 데이터를 읽고 쓰는 함수 모음
-    2) dateUtils.js: 날짜 계산(D-day 등) 함수 모음
-    3) main.js     : 위 두 파일의 함수를 이용해서 화면(목록)을 그림
+    2) icons.js    : 카테고리별 SVG 아이콘 모음
+    3) dateUtils.js: 날짜 계산(D-day 등) 함수 모음
+    4) main.js     : 위 파일들의 함수를 이용해서 화면(목록)을 그림
   -->
   <script src="js/storage.js"></script>
+  <script src="js/icons.js"></script>
   <script src="js/dateUtils.js"></script>
   <script src="js/main.js"></script>
 </body>

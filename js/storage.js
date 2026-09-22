@@ -20,14 +20,8 @@
 // localStorage에 저장할 때 사용할 키 이름
 const STORAGE_KEY = "expiryItems";
 
-// 카테고리 종류와 카테고리별 이모지 아이콘
+// 카테고리 종류 (카테고리별 아이콘은 js/icons.js의 CATEGORY_ICONS_SVG를 사용합니다)
 const CATEGORIES = ["상온", "냉장", "냉동", "화장품"];
-const CATEGORY_ICONS = {
-  상온: "🥫",
-  냉장: "🧊",
-  냉동: "❄️",
-  화장품: "🧴",
-};
 
 // 카테고리/알림일수가 없는 경우(예전에 저장된 데이터)에 사용할 기본값
 const DEFAULT_CATEGORY = "상온";
